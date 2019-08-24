@@ -1,20 +1,38 @@
-import React from "react";
+import React, { useEffect, useReducer } from "react";
 import styled from "styled-components";
+import { useWebsocket } from "./ChatApp.hooks";
 
-const messages = [
+interface IAction {
+  type: string;
+  payload: any;
+}
+
+interface IMessage {
+  messageText: string;
+  authorId: string;
+}
+
+const messages: IMessage[] = [
   {
-    message: "TESTMESSAGE",
-    author: "0001"
+    messageText: "TESTMESSAGE",
+    authorId: "0001"
   },
   {
-    message: "TESTMESSAGE1",
-    author: "0002"
+    messageText: "TESTMESSAGE1",
+    authorId: "0002"
   },
   {
-    message: "TESTMESSAGE2",
-    author: "0003"
+    messageText: "TESTMESSAGE2",
+    authorId: "0003"
   }
 ];
+
+const initialState = messages;
+
+
+const reducer = (state: IMessage[], action: IAction) => {
+  return state;
+};
 
 const ChatView = styled.div`
   width: 400px;
@@ -22,10 +40,14 @@ const ChatView = styled.div`
 `;
 
 export function ChatApp() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const { sendMessage } = useWebsocket();
+    
   return (
     <ChatView>
       {messages.map(messageEntry => (
-        <div>{messageEntry.message}</div>
+        <div>{messageEntry.messageText}</div>
       ))}
     </ChatView>
   );
