@@ -11,9 +11,7 @@ const messagesIds = [];
 
 function broadcast(message, excludeUser) {
   const messageString = JSON.stringify(message);
-  console.log('broadcast', message, 'noto', excludeUser);
   for (const key in clients) {
-    console.log(typeof(key), typeof(excludeUser));
     if (key !== excludeUser) {
       clients[key].socket.send(messageString);
     }
@@ -31,7 +29,8 @@ webSocketServer.on("connection", socket => {
     switch (incomingMessage.event) {
       case "message":
         const messageEntry = {
-          message: incomingMessage.payload,
+          id: Date.now(),
+          messageText: incomingMessage.payload.messageText,
           time: Date.now(),
           author: id
         };
@@ -39,6 +38,18 @@ webSocketServer.on("connection", socket => {
         messages[messageId] = messageEntry;
         messagesIds.push(messageId);
         broadcast({ type: "message", payload: messageEntry });
+        break;
+      case 'modifyMessage':
+        const modifiedId = String(incomingMessage.payload.id);
+        const modifiedMessageEntry = { ...messages[modifiedId], ...incomingMessage.payload,  isModified: true, time: Date.now()};
+        
+        console.log(messages[modifiedId], modifiedMessageEntry);
+        broadcast({ type: "modifyMessage", payload: modifiedMessageEntry });
+        break;
+      case 'deleteMessage':
+        const deletedId = incomingMessage.payload.id;
+        const deletedMessageEntry = { ...messages[deletedId], isDeleted: true, time: Date.now()};
+        broadcast({ type: "deletedMessage", payload: deletedMessageEntry });
         break;
       case "setNickName":
         clients[id].nickName = incomingMessage.payload;

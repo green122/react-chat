@@ -3,23 +3,7 @@ import { State, EActionTypes, IMessage, IAction } from "../../models";
 
 let client: WebSocket;
 
-const messages: IMessage[] = [
-  {
-    messageText: "TESTMESSAGE",
-    authorId: "0001",
-    time: 1
-  },
-  {
-    messageText: "TESTMESSAGE1",
-    authorId: "0002",
-    time: 2
-  },
-  {
-    messageText: "TESTMESSAGE2",
-    authorId: "0003",
-    time: 3
-  }
-];
+const messages: IMessage[] = [];
 
 const initialState: State = { connected: false, users: [], messages };
 
@@ -29,8 +13,19 @@ const reducer = (state: State, action: IAction): State => {
       return { ...state, messages: [...state.messages, action.payload] };
     case EActionTypes.LoadUsers:
       return { ...state, users: action.payload };
-      case EActionTypes.SetConnected:
-        return { ...state, connected: action.payload };
+    case EActionTypes.SetConnected:
+      return { ...state, connected: action.payload };
+    case EActionTypes.EditMessage:
+      const messageIndex = state.messages.findIndex(
+        ({ id }) => id === action.payload.id
+      );
+      if (messageIndex > -1) {
+        const newMessages = Object.assign([], state.messages, {
+          [messageIndex]: action.payload
+        });
+        return { ...state, messages: newMessages };
+      }
+      return state;
     default:
       return state;
   }
@@ -49,19 +44,22 @@ export const useWebsocket = (dispatch: Dispatch<IAction>, nickName: string) => {
     if (!client) {
       client = new WebSocket("ws://localhost:8081");
     }
-    
+
     client.onmessage = (event: MessageEvent) => {
       const messageData = JSON.parse(event.data);
       const { payload } = messageData;
       switch (messageData.type) {
         case "message":
-          const message: IMessage = {
-            messageText: payload.message,
-            authorId: payload.author,
-            time: payload.time
-          };
-
-          dispatch({ type: EActionTypes.AddMessage, payload: message });
+          dispatch({ type: EActionTypes.AddMessage, payload });
+          break;
+        case "logged":
+          dispatch({ type: EActionTypes.Logged, payload });
+          break;
+        case "modifyMessage":
+          dispatch({ type: EActionTypes.EditMessage, payload });
+          break;
+        case "deleteMessage":
+          dispatch({ type: EActionTypes.DeleteMessage, payload });
           break;
         case "userEntered":
           const messageJoin: IMessage = {
@@ -77,11 +75,11 @@ export const useWebsocket = (dispatch: Dispatch<IAction>, nickName: string) => {
     };
 
     client.onopen = () => {
-      dispatch({ type: EActionTypes.SetConnected, payload: true })
-    }
+      dispatch({ type: EActionTypes.SetConnected, payload: true });
+    };
     client.onclose = () => {
-      dispatch({ type: EActionTypes.SetConnected, payload: false })
-    }
+      dispatch({ type: EActionTypes.SetConnected, payload: false });
+    };
     return () => {
       client.close();
     };
@@ -91,7 +89,7 @@ export const useWebsocket = (dispatch: Dispatch<IAction>, nickName: string) => {
     if (nickName) {
       emitEvent("setNickName", nickName);
     }
-  }, [nickName])
+  }, [nickName]);
 
   function emitEvent(event: string, payload: any) {
     if (isClientReady()) {
@@ -100,8 +98,13 @@ export const useWebsocket = (dispatch: Dispatch<IAction>, nickName: string) => {
     }
   }
 
-  function sendMessage(message: any) {
-    emitEvent("message", message);
+  function sendMessage(message: IMessage) {
+    const eventName = message.isModified
+      ? "modifyMessage"
+      : message.isDeleted
+      ? "deleteMessage"
+      : "message";
+    emitEvent(eventName, message);
   }
 
   return { sendMessage };
