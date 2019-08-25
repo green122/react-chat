@@ -23,3 +23,8 @@ export interface State {
   users: IUser[];
   messages: IMessage[];
 }
+
+export enum ETabs {
+  Participants = "Participants",
+  Chat = "Chat"
+}

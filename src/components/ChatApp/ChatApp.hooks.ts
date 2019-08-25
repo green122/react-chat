@@ -28,7 +28,7 @@ const initialState: State = { users: [], messages };
 const reducer = (state: State, action: IAction): State => {
   switch (action.type) {
     case EActionTypes.AddMessage:
-      return { ...state, messages: [...messages, action.payload] };
+      return { ...state, messages: [...state.messages, action.payload] };
     case EActionTypes.LoadUsers:
       return { ...state, users: action.payload };
     default:
@@ -64,6 +64,7 @@ export const useWebsocket = (dispatch: Dispatch<IAction>, nickName: string) => {
           break;
         case "userEntered":
           dispatch({ type: EActionTypes.LoadUsers, payload: messageData.clients });
+          break;
         default:
           break;
       }
