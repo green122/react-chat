@@ -20,7 +20,7 @@ const App: React.FC = () => {
       sendMessage={sendMessage}
     />
   ) : state.connected ? (
-    <ChatInput onSubmit={setNickName} />
+    <ChatInput onSubmit={setNickName} value="" />
   ) : null;
 };
 

@@ -5,8 +5,11 @@ export interface IAction {
 
 export interface IMessage {
   messageText: string;
-  authorId: string;
-  time: number;
+  id?: string;
+  authorId?: string;
+  time?: number;
+  isModified?: boolean;
+  isDeleted?: boolean;
 }
 
 export interface IUser {
@@ -17,7 +20,10 @@ export interface IUser {
 export enum EActionTypes {
   AddMessage = "Add message",
   LoadUsers = "Load users",
-  SetConnected = "Set connected"
+  SetConnected = "Set connected",
+  Logged = "Logged",
+  EditMessage = "Edit message",
+  DeleteMessage = "Delete message"
 }
 
 export interface State {
