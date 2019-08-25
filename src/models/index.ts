@@ -16,10 +16,12 @@ export interface IUser {
 
 export enum EActionTypes {
   AddMessage = "Add message",
-  LoadUsers = "Load users"
+  LoadUsers = "Load users",
+  SetConnected = "Set connected"
 }
 
 export interface State {
+  connected: boolean;
   users: IUser[];
   messages: IMessage[];
 }

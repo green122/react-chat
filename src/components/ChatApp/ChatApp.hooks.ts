@@ -3,8 +3,6 @@ import { State, EActionTypes, IMessage, IAction } from "../../models";
 
 let client: WebSocket;
 
-
-
 const messages: IMessage[] = [
   {
     messageText: "TESTMESSAGE",
@@ -23,7 +21,7 @@ const messages: IMessage[] = [
   }
 ];
 
-const initialState: State = { users: [], messages };
+const initialState: State = { connected: false, users: [], messages };
 
 const reducer = (state: State, action: IAction): State => {
   switch (action.type) {
@@ -31,6 +29,8 @@ const reducer = (state: State, action: IAction): State => {
       return { ...state, messages: [...state.messages, action.payload] };
     case EActionTypes.LoadUsers:
       return { ...state, users: action.payload };
+      case EActionTypes.SetConnected:
+        return { ...state, connected: action.payload };
     default:
       return state;
   }
@@ -46,12 +46,13 @@ function isClientReady() {
 
 export const useWebsocket = (dispatch: Dispatch<IAction>, nickName: string) => {
   useEffect(() => {
-    if (!isClientReady()) {
+    if (!client) {
       client = new WebSocket("ws://localhost:8081");
     }
+    
     client.onmessage = (event: MessageEvent) => {
       const messageData = JSON.parse(event.data);
-      const {payload} = messageData;
+      const { payload } = messageData;
       switch (messageData.type) {
         case "message":
           const message: IMessage = {
@@ -59,23 +60,38 @@ export const useWebsocket = (dispatch: Dispatch<IAction>, nickName: string) => {
             authorId: payload.author,
             time: payload.time
           };
-          
+
           dispatch({ type: EActionTypes.AddMessage, payload: message });
           break;
         case "userEntered":
-          dispatch({ type: EActionTypes.LoadUsers, payload: messageData.clients });
+          const messageJoin: IMessage = {
+            messageText: `${payload.user.nickName} joined`,
+            authorId: "bot",
+            time: payload.time
+          };
+          dispatch({ type: EActionTypes.AddMessage, payload: messageJoin });
           break;
         default:
           break;
       }
     };
+
     client.onopen = () => {
-      emitEvent("setNickName", nickName);
-    };
+      dispatch({ type: EActionTypes.SetConnected, payload: true })
+    }
+    client.onclose = () => {
+      dispatch({ type: EActionTypes.SetConnected, payload: false })
+    }
     return () => {
       client.close();
     };
-  }, [dispatch, nickName]);
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (nickName) {
+      emitEvent("setNickName", nickName);
+    }
+  }, [nickName])
 
   function emitEvent(event: string, payload: any) {
     if (isClientReady()) {

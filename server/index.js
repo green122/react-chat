@@ -1,9 +1,7 @@
 const WebSocketServer = new require("ws");
 
-// подключённые клиенты
 const clients = {};
 
-// WebSocket-сервер на порту 8081
 const webSocketServer = new WebSocketServer.Server({
   port: 8081
 });
@@ -11,22 +9,25 @@ const webSocketServer = new WebSocketServer.Server({
 const messages = {};
 const messagesIds = [];
 
-function broadcast(message) {
+function broadcast(message, excludeUser) {
   const messageString = JSON.stringify(message);
+  console.log('broadcast', message, 'noto', excludeUser);
   for (const key in clients) {
-    clients[key].socket.send(messageString);
+    console.log(typeof(key), typeof(excludeUser));
+    if (key !== excludeUser) {
+      clients[key].socket.send(messageString);
+    }
   }
 }
 
 webSocketServer.on("connection", socket => {
   const id = Math.random();
   clients[id] = { socket };
-
-  socket.on("send-nickname", nickname => {});
+  console.log('opened', id);
 
   socket.on("message", function(rawMessage) {
     const incomingMessage = JSON.parse(rawMessage);
-
+    console.log(incomingMessage);
     switch (incomingMessage.event) {
       case "message":
         const messageEntry = {
@@ -40,17 +41,21 @@ webSocketServer.on("connection", socket => {
         broadcast({ type: "message", payload: messageEntry });
         break;
       case "setNickName":
-        clients[id].nickname = incomingMessage.payload;
+        clients[id].nickName = incomingMessage.payload;
         const clientsList = Object.keys(clients).reduce((acc, current) => {
-            return [...acc, { id: current, nickname: clients[current].nickname }];
+          return [...acc, { id: current, nickName: clients[current].nickname }];
         }, []);
-        
+
         const loggedMessage = {
           type: "userEntered",
-          clients: clientsList
+          payload: {
+            user: { id, nickName: incomingMessage.payload },
+            time: Date.now()
+          }
         };
-        socket.send(JSON.stringify({ type: 'logged', id, nickname: incomingMessage.payload}))
-        broadcast(loggedMessage);
+        socket.send(JSON.stringify({ type: "logged", payload: id }));
+        console.log('userLogged:', id, incomingMessage.payload);       
+        broadcast(loggedMessage, String(id));
         break;
 
       default:
