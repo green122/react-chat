@@ -8,15 +8,19 @@ import {
   useWebsocket
 } from "./components/ChatApp/ChatApp.hooks";
 
+
 const App: React.FC = () => {
   const [nickName, setNickName] = useState("");
   const [state, dispatch] = useMessagesReducer();
   const { sendMessage } = useWebsocket(dispatch, nickName);
+  const { users, messages, userId } = state;
+ 
 
   return state.connected && nickName ? (
     <ChatApp
-      messages={state.messages}
-      users={state.users}
+      messages={messages}
+      userId={userId}
+      users={users}
       sendMessage={sendMessage}
     />
   ) : state.connected ? (

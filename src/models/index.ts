@@ -6,10 +6,15 @@ export interface IAction {
 export interface IMessage {
   messageText: string;
   id?: string;
-  authorId?: string;
+  authorId?: string;  
   time?: number;
   isModified?: boolean;
   isDeleted?: boolean;
+}
+
+export interface IMappedMessage extends IMessage {
+  author: string;
+  timeView: string;
 }
 
 export interface IUser {
@@ -23,10 +28,14 @@ export enum EActionTypes {
   SetConnected = "Set connected",
   Logged = "Logged",
   EditMessage = "Edit message",
-  DeleteMessage = "Delete message"
+  GetMessagesList = "Get Messages List",
+  DeleteMessage = "Delete message",
+  UserJoined = "User Joined",
+  UserLeft = "User Left",
 }
 
 export interface State {
+  userId: string;
   connected: boolean;
   users: IUser[];
   messages: IMessage[];

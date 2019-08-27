@@ -2,12 +2,20 @@ import React, { useState, KeyboardEvent } from "react";
 import styled from "styled-components";
 
 const ChatInputView = styled.input`
-  width: 400px;
-  height: 100%;
+  width: 90%;
+  border-radius: 10px;
+  border: 1px solid darkgrey;
+  height: 60px;
 `;
 
 type SubmitFunctionType = (value: string) => void;
-export function ChatInput({ onSubmit, value }: { onSubmit: SubmitFunctionType, value: string }) {
+export function ChatInput({
+  onSubmit,
+  value
+}: {
+  onSubmit: SubmitFunctionType;
+  value: string;
+}) {
   const [message, setMessage] = useState(value);
   const [prevValue, setPrevValue] = useState(value);
 
