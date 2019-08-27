@@ -6,13 +6,17 @@ import { ChatMessage } from "../ChatMessage/ChatMessage";
 import { ChatTabs } from "../ChatTabs/ChatTabs";
 import { UsersList } from "../UsersList/UsersList";
 import { getMappedMessages } from "../../utils/common";
+import { Header } from "../Header/Header";
 
-const ChatView = styled.div`
+const ChatView = styled.section`
   width: 480px;
   display: flex;
-  height: calc(100vh - 20px);
+  box-sizing: border-box;
+  background-color: white;
+  height: 100vh;
+  padding: 10px 0;
   flex-direction: column;
-  margin: 10px auto;
+  margin: 0 auto;
   justify-content: start;
   font-size: 24px;
 `;
@@ -20,6 +24,7 @@ const ChatView = styled.div`
 const ChatList = styled.div`
   padding: 24px;
   flex-grow: 1;
+  background-color: white;
   overflow-y: scroll;
   overflow-x: hidden;
   display: flex;
@@ -43,7 +48,12 @@ interface IChatAppProps {
   sendMessage: (message: IMappedMessage) => void;
 }
 
-export function ChatApp({ messages, users, sendMessage, userId }: IChatAppProps) {
+export function ChatApp({
+  messages,
+  users,
+  sendMessage,
+  userId
+}: IChatAppProps) {
   const chatViewRef: RefObject<HTMLDivElement> = useRef({} as HTMLDivElement);
   const [newMessagesAtBottom, setNewMessagesFlag] = useState(false);
   const [editingMessageIndex, setEditingMessageIndex] = useState(-1);
@@ -53,7 +63,7 @@ export function ChatApp({ messages, users, sendMessage, userId }: IChatAppProps)
   const mappedMessages = getMappedMessages(messages, users);
 
   useEffect(() => {
-    if (!refToElement) return;
+    if (!refToElement || !refToElement.clientHeight) return;
     if (
       refToElement.clientHeight + refToElement.scrollTop <
       refToElement.scrollHeight
@@ -71,7 +81,19 @@ export function ChatApp({ messages, users, sendMessage, userId }: IChatAppProps)
   };
 
   const handleEditMessage = (event: any) => {
-    setEditingMessageIndex(Number(event.target.dataset.tag));
+    setEditingMessageIndex(
+      mappedMessages.length - Number(event.currentTarget.dataset.tag) - 1
+    );
+  };
+
+  const handleDeleteMessage = (event: any) => {
+    const messageIndex =
+      mappedMessages.length - Number(event.currentTarget.dataset.tag) - 1;
+    const messageToSend: IMappedMessage = {
+      ...mappedMessages[messageIndex],
+      isDeleted: true
+    };
+    sendMessage(messageToSend);
   };
 
   const handleChange = (message: string) => {
@@ -92,6 +114,7 @@ export function ChatApp({ messages, users, sendMessage, userId }: IChatAppProps)
 
   return (
     <ChatView>
+      <Header />
       <ChatTabs
         activeTab={activeTab}
         onChange={tab => setActiveTab(tab)}
@@ -107,16 +130,15 @@ export function ChatApp({ messages, users, sendMessage, userId }: IChatAppProps)
                 key={index}
                 tag={index}
                 editable={messageEntry.authorId === userId}
-                onDoubleClick={handleEditMessage}
-                author={messageEntry.author}
-                time={messageEntry.timeView}
-                messageText={messageEntry.messageText}
+                onEdit={handleEditMessage}
+                onDelete={handleDeleteMessage}
+                messageEntry={messageEntry}
               />
             ))}
         </ChatList>
       )}
       {activeTab === ETabs.Participants && <UsersList users={users} />}
-      <ScrollButton onClick={scrollToBottom}>+</ScrollButton>
+      {/* <ScrollButton onClick={scrollToBottom}>+</ScrollButton> */}
       {newMessagesAtBottom && (
         <ScrollButton onClick={scrollToBottom}>+</ScrollButton>
       )}
@@ -124,7 +146,7 @@ export function ChatApp({ messages, users, sendMessage, userId }: IChatAppProps)
         onSubmit={handleChange}
         value={
           editingMessageIndex > -1
-            ? messages[editingMessageIndex].messageText
+            ? mappedMessages[editingMessageIndex].messageText
             : ""
         }
       />

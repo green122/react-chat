@@ -2,14 +2,20 @@ import React from "react";
 import styled from "styled-components";
 import { IUser } from "../../models";
 
-const UsersWrapper = styled.section`
+const UsersWrapper = styled.section`  
+  flex-grow: 1;
+  background-color: white;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
-  background-color: #e9e9e9;
+  flex-direction: column;
 `;
 
 const UserRow = styled.div`
-  height: 15px;
+  height: auto;
   width: 100%;
+  padding: 12px;
+  border-bottom: 1px solid;
 `;
 
 interface UsersListProps {
