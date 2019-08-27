@@ -1,27 +1,39 @@
 import { useEffect, useReducer, Dispatch } from "react";
-import { State, EActionTypes, IMessage, IAction } from "../../models";
+import { State, EActionTypes, IMessage, IAction, IMappedMessage } from "../../models";
 
 let client: WebSocket;
 
 const messages: IMessage[] = [];
 
-const initialState: State = { connected: false, users: [], messages };
+const initialState: State = { userId: '', connected: false, users: [], messages };
 
 const reducer = (state: State, action: IAction): State => {
+  const { payload } = action;
   switch (action.type) {
     case EActionTypes.AddMessage:
-      return { ...state, messages: [...state.messages, action.payload] };
+      return { ...state, messages: [...state.messages, payload] };
     case EActionTypes.LoadUsers:
-      return { ...state, users: action.payload };
+      return { ...state, users: payload };
+    case EActionTypes.Logged:
+      return { ...state, userId: payload };
+    case EActionTypes.UserJoined:
+      return { ...state, users: [...state.users, payload] };
     case EActionTypes.SetConnected:
-      return { ...state, connected: action.payload };
+      return { ...state, connected: payload };
+    case EActionTypes.GetMessagesList:
+      return { ...state, messages: payload };
+    case EActionTypes.UserLeft:
+      return {
+        ...state,
+        users: state.users.filter(({ id }) => id !== payload.user.id)
+      };
     case EActionTypes.EditMessage:
       const messageIndex = state.messages.findIndex(
-        ({ id }) => id === action.payload.id
+        ({ id }) => id === payload.id
       );
       if (messageIndex > -1) {
         const newMessages = Object.assign([], state.messages, {
-          [messageIndex]: action.payload
+          [messageIndex]: payload
         });
         return { ...state, messages: newMessages };
       }
@@ -61,13 +73,17 @@ export const useWebsocket = (dispatch: Dispatch<IAction>, nickName: string) => {
         case "deleteMessage":
           dispatch({ type: EActionTypes.DeleteMessage, payload });
           break;
+        case "usersList":
+          dispatch({ type: EActionTypes.LoadUsers, payload });
+          break;
+        case "lastMessages":
+          dispatch({ type: EActionTypes.GetMessagesList, payload });
+          break;
         case "userEntered":
-          const messageJoin: IMessage = {
-            messageText: `${payload.user.nickName} joined`,
-            authorId: "bot",
-            time: payload.time
-          };
-          dispatch({ type: EActionTypes.AddMessage, payload: messageJoin });
+          dispatch({ type: EActionTypes.UserJoined, payload: payload.user });
+          break;
+        case "userLeft":
+          dispatch({ type: EActionTypes.UserLeft, payload });
           break;
         default:
           break;
@@ -98,7 +114,7 @@ export const useWebsocket = (dispatch: Dispatch<IAction>, nickName: string) => {
     }
   }
 
-  function sendMessage(message: IMessage) {
+  function sendMessage(message: IMappedMessage) {
     const eventName = message.isModified
       ? "modifyMessage"
       : message.isDeleted
