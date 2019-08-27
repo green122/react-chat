@@ -62,7 +62,7 @@ webSocketServer.on("connection", socket => {
           isDeleted: true,
           time: Date.now()
         };
-        broadcast({ type: "deletedMessage", payload: deletedMessageEntry });
+        broadcast({ type: "deleteMessage", payload: deletedMessageEntry });
         break;
       case "setNickName":
         clients[id].nickName = incomingMessage.payload;

@@ -1,11 +1,22 @@
 import { useEffect, useReducer, Dispatch } from "react";
-import { State, EActionTypes, IMessage, IAction, IMappedMessage } from "../../models";
+import {
+  State,
+  EActionTypes,
+  IMessage,
+  IAction,
+  IMappedMessage
+} from "../../models";
 
 let client: WebSocket;
 
 const messages: IMessage[] = [];
 
-const initialState: State = { userId: '', connected: false, users: [], messages };
+const initialState: State = {
+  userId: "",
+  connected: false,
+  users: [],
+  messages
+};
 
 const reducer = (state: State, action: IAction): State => {
   const { payload } = action;
@@ -27,7 +38,7 @@ const reducer = (state: State, action: IAction): State => {
         ...state,
         users: state.users.filter(({ id }) => id !== payload.user.id)
       };
-    case EActionTypes.EditMessage:
+    case (EActionTypes.EditMessage, EActionTypes.DeleteMessage):
       const messageIndex = state.messages.findIndex(
         ({ id }) => id === payload.id
       );
