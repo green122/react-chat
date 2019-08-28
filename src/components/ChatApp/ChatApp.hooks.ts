@@ -6,6 +6,7 @@ import {
   IAction,
   IMappedMessage
 } from "../../models";
+import cookie from "js-cookie";
 
 let client: WebSocket;
 
@@ -13,6 +14,8 @@ const messages: IMessage[] = [];
 
 const initialState: State = {
   userId: "",
+  nickName: "",
+  isAuthProcessing: false,
   connected: false,
   users: [],
   messages
@@ -25,8 +28,12 @@ const reducer = (state: State, action: IAction): State => {
       return { ...state, messages: [...state.messages, payload] };
     case EActionTypes.LoadUsers:
       return { ...state, users: payload };
+    case EActionTypes.AuthProcessing:
+      return { ...state, isAuthProcessing: payload };
+    case EActionTypes.SetNickName:
+      return { ...state, nickName: payload };
     case EActionTypes.Logged:
-      return { ...state, userId: payload };
+      return { ...state, userId: payload.id, nickName: payload.nickName };
     case EActionTypes.UserJoined:
       return { ...state, users: [...state.users, payload] };
     case EActionTypes.SetConnected:
@@ -62,7 +69,7 @@ function isClientReady() {
   return client && client.readyState === client.OPEN;
 }
 
-export const useWebsocket = (dispatch: Dispatch<IAction>, nickName: string) => {
+export const useWebsocket = (dispatch: Dispatch<IAction>) => {
   useEffect(() => {
     if (!client) {
       client = new WebSocket("ws://localhost:8081");
@@ -77,7 +84,13 @@ export const useWebsocket = (dispatch: Dispatch<IAction>, nickName: string) => {
           break;
         case "logged":
           dispatch({ type: EActionTypes.Logged, payload });
+          cookie.set('chat-ts-app', payload.id);
           break;
+        case "restored":
+            dispatch({ type: EActionTypes.AuthProcessing, payload: false});
+            dispatch({ type: EActionTypes.SetNickName, payload });
+            emitEvent('setNickName', payload);
+            break;
         case "modifyMessage":
           dispatch({ type: EActionTypes.EditMessage, payload });
           break;
@@ -110,13 +123,7 @@ export const useWebsocket = (dispatch: Dispatch<IAction>, nickName: string) => {
     return () => {
       client.close();
     };
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (nickName) {
-      emitEvent("setNickName", nickName);
-    }
-  }, [nickName]);
+  }, [dispatch]);  
 
   function emitEvent(event: string, payload: any) {
     if (isClientReady()) {
@@ -134,5 +141,5 @@ export const useWebsocket = (dispatch: Dispatch<IAction>, nickName: string) => {
     emitEvent(eventName, message);
   }
 
-  return { sendMessage };
+  return { sendMessage, emitEvent };
 };

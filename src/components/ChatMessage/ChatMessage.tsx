@@ -1,8 +1,8 @@
-import React, { SyntheticEvent, Fragment } from "react";
+import React, { SyntheticEvent, Fragment, createElement } from "react";
 import styled from "styled-components";
 import { ReactComponent as Pen } from "../../ui-res/pen-solid.svg";
 import { ReactComponent as Delete } from "../../ui-res/times-solid.svg";
-import { IMappedMessage } from "../../models";
+import { IMappedMessage, IElementBlock } from "../../models";
 
 const Actions = styled.div`
   width: 50px;
@@ -40,8 +40,12 @@ const Time = styled.p`
 const Message = styled.div`
   display: block;
   margin: 0;
-  line-break: strict;
-  word-break: break-all;
+  p,
+  a {
+    line-break: strict;
+    word-break: break-all;
+    display: inline;
+  }
 `;
 
 const Modified = styled.p`
@@ -70,6 +74,14 @@ interface ChatMessageProps {
   onDelete: (event: SyntheticEvent) => void;
 }
 
+export function convertBlockToJSX(block: IElementBlock) {
+  return block.type === "a" ? (
+    <a href={block.text}>{block.text}</a>
+  ) : (
+    <p>{block.text}</p>
+  );
+}
+
 export function ChatMessage({
   tag,
   editable = false,
@@ -77,12 +89,18 @@ export function ChatMessage({
   onEdit,
   onDelete
 }: ChatMessageProps) {
-  const { messageText, author, timeView, isModified, isDeleted } = messageEntry;
-  const additionalMessage = isModified
-    ? "(edited)"
-    : isDeleted
-    ? "Message is deleted"
-    : "";
+  const {
+    messageBlocks,
+    author,
+    timeView,
+    isModified,
+    isDeleted
+  } = messageEntry;
+
+  const messageContent = (
+    <Fragment>{messageBlocks.map(convertBlockToJSX)}</Fragment>
+  );
+
   return (
     <MessageWrapper className={editable ? `editable` : ""}>
       <Author>{author}</Author>
@@ -90,7 +108,7 @@ export function ChatMessage({
       {!isDeleted ? (
         <Fragment>
           <Message>
-            {messageText}
+            {messageContent}
             {isModified && <Modified>(edited)</Modified>}
           </Message>
           <Actions>

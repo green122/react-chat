@@ -1,6 +1,20 @@
 const WebSocketServer = new require("ws");
+const server = require("express")();
+
+server.use(require("cors")());
 
 const clients = {};
+
+server.get("/auth", (request, response) => {
+  const userId = String(request.headers["chat-ts-app"]);
+  console.log(clients, userId);
+  const client = (clients[userId] && clients[userId].nickName) || {};
+  response.json({ nickName: client });
+});
+
+server.listen(4000, () => {
+  console.log("server started");
+});
 
 const webSocketServer = new WebSocketServer.Server({
   port: 8081
@@ -64,17 +78,31 @@ webSocketServer.on("connection", socket => {
         };
         broadcast({ type: "deleteMessage", payload: deletedMessageEntry });
         break;
+      case "setId":
+        const userId = incomingMessage.payload;
+        const restoredNickName =
+          (clients[userId] && clients[userId].nickName) || "";
+        if (restoredNickName) {
+          addAndBroadcastMessage(`${restoredNickName} joined`, "bot", String(id));          
+        }
+        socket.send(
+          JSON.stringify({
+            type: "restored",
+            payload: restoredNickName
+          })
+        );
+        break;
       case "setNickName":
         clients[id].nickName = incomingMessage.payload;
         const clientsList = Object.keys(clients).reduce((acc, current) => {
           return [...acc, { id: current, nickName: clients[current].nickName }];
         }, []);
         const messagesList = messagesIds.map(id => messages[id]);
-
+        const user = {  id, nickName: incomingMessage.payload };
         const loggedMessage = {
           type: "userEntered",
           payload: {
-            user: { id, nickName: incomingMessage.payload },
+            user,
             time: Date.now()
           }
         };
@@ -83,7 +111,7 @@ webSocketServer.on("connection", socket => {
           "bot",
           String(id)
         );
-        socket.send(JSON.stringify({ type: "logged", payload: id }));
+        socket.send(JSON.stringify({ type: "logged", payload: user }));
         socket.send(
           JSON.stringify({ type: "usersList", payload: clientsList })
         );
@@ -110,6 +138,5 @@ webSocketServer.on("connection", socket => {
       },
       String(id)
     );
-    delete clients[id];
   });
 });
