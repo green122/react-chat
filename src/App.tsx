@@ -1,28 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChatApp } from "./components/ChatApp/ChatApp";
+import axios from "axios";
+import cookie from "js-cookie";
 
-import "./App.css";
 import { ChatInput } from "./components/ChatInput/ChatInput";
 import {
   useMessagesReducer,
   useWebsocket
 } from "./components/ChatApp/ChatApp.hooks";
 import styled from "styled-components";
+import { EActionTypes } from "./models";
 
 const Container = styled.article`
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  align-items: center;
+  display: flex;
   background-color: #dddddd;
 `;
 
 const App: React.FC = () => {
-  const [nickName, setNickName] = useState("");
   const [state, dispatch] = useMessagesReducer();
-  const { sendMessage } = useWebsocket(dispatch, nickName);
-  const { users, messages, userId } = state;
+  const { sendMessage, emitEvent } = useWebsocket(dispatch);
+  const { users, messages, userId, connected } = state;
 
-  const Component = () =>
-    state.connected && nickName ? (
+  useEffect(() => {
+    const userCookie = cookie.get("chat-ts-app");
+    if (!userCookie || !connected) {
+      return;
+    }
+    dispatch({ type: EActionTypes.AuthProcessing, payload: true});
+    emitEvent('setId', userCookie);
+  }, [connected]);  
+
+  const { isAuthProcessing, nickName } = state;
+
+  const Component = () => {
+    if (isAuthProcessing) return null;
+    return state.connected && nickName ? (
       <ChatApp
         messages={messages}
         userId={userId}
@@ -30,8 +45,9 @@ const App: React.FC = () => {
         sendMessage={sendMessage}
       />
     ) : state.connected ? (
-      <ChatInput onSubmit={setNickName} value="" />
+      <ChatInput onSubmit={nickName => emitEvent('setNickName', nickName)} value="" />
     ) : null;
+  };
 
   return (
     <Container>

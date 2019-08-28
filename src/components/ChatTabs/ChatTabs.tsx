@@ -7,24 +7,29 @@ const Tabs = styled.section`
   background-color: #e9e9e9;
 `;
 
-const Tab = styled.div`
+const TabContainer = styled.div`
   cursor: pointer;
   height: 80px;
   width: ${(props: { width: number }) => props.width}%;
-  flex-grow: 1; 
+  flex-grow: 1;
   &.active {
     background-color: white;
-    border: 2px solid lightgray;    
+    border: 2px solid lightgray;
     border-bottom: none;
     &:nth-child(1) {
       border-radius: 0 10px 0 0;
-      border-left: none;      
+      border-left: none;
     }
     &:last-child {
       border-radius: 10px 0 0 0;
-      border-right: none;      
+      border-right: none;
     }
   }
+`;
+
+const Tab = styled.p`
+  text-align: center;
+  vertical-align: center;
 `;
 
 interface ChatTabsProps {
@@ -34,19 +39,18 @@ interface ChatTabsProps {
 }
 type onChangeHandler = (value: ETabs) => void;
 export function ChatTabs({ onChange, tabs, activeTab }: ChatTabsProps) {
-  
   const tabWidth = tabs.length ? 100 / tabs.length : 100;
 
   return (
     <Tabs>
       {tabs.map(tab => (
-        <Tab
+        <TabContainer
           width={tabWidth}
-          className={tab.id === activeTab ? 'active' : ''}          
-          onClick={() => onChange(tab.id)}         
+          className={tab.id === activeTab ? "active" : ""}
+          onClick={() => onChange(tab.id)}
         >
-          {tab.message}
-        </Tab>
+          <Tab>{tab.message}</Tab>
+        </TabContainer>
       ))}
     </Tabs>
   );

@@ -7,12 +7,13 @@ import React, {
 } from "react";
 import styled from "styled-components";
 
+
 const ChatInputView = styled.textarea`
   resize: none;
   overflow: hidden;
   min-height: 24px;
   max-height: 100px;
-  width: 90%;
+  margin: 0 30px 10px 10px;
   border-radius: 20px;
   border: 1px solid darkgrey;
   height: 24px;
@@ -39,8 +40,9 @@ export function ChatInput({
 
   useEffect(() => {
     const element = textRef.current as HTMLElement;
-    element.style.height = "5px";
-    element.style.height = element.scrollHeight + "px";
+    console.log(element.scrollHeight);
+    // element.style.height = "5px";
+    // element.style.height = element.scrollHeight + "px";
   }, [message]);
 
   if (value !== prevValue) {

@@ -13,16 +13,17 @@ const ChatView = styled.section`
   display: flex;
   box-sizing: border-box;
   background-color: white;
-  height: 100vh;
-  padding: 10px 0;
+  height: calc(100vh - 20px);
   flex-direction: column;
   margin: 0 auto;
   justify-content: start;
   font-size: 24px;
+  
 `;
 
 const ChatList = styled.div`
   padding: 24px;
+  height: 0px;
   flex-grow: 1;
   background-color: white;
   overflow-y: scroll;
@@ -36,6 +37,7 @@ const ScrollButton = styled.button`
   height: 20px;
   border-radius: 50%;
   border: 0;
+  position: absolute;
   cursor: pointer;
   background: white;
   box-shadow: 5px 5px 5px gray;
