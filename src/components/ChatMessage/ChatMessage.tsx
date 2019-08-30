@@ -90,7 +90,7 @@ export function ChatMessage({
   onDelete
 }: ChatMessageProps) {
   const {
-    messageBlocks,
+    messageBlocks = [],
     author,
     timeView,
     isModified,

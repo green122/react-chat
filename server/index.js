@@ -24,38 +24,66 @@ const messages = {};
 const messagesIds = [];
 
 function broadcast(message, excludeUser) {
-  const messageString = JSON.stringify(message);
   for (const key in clients) {
     const clientSocket = clients[key].socket;
     if (key !== excludeUser && clientSocket.readyState === clientSocket.OPEN) {
-      clientSocket.send(messageString);
+      sendMessage(clientSocket, message);
     }
   }
 }
 
 function addAndBroadcastMessage(messageText, authorId, excludeUserId) {
+  const messageId = String(Date.now());
   const messageEntry = {
-    id: Date.now(),
+    id: messageId,
     messageText,
     time: Date.now(),
     authorId
   };
-  const messageId = Date.now();
   messages[messageId] = messageEntry;
   messagesIds.push(messageId);
   broadcast({ type: "message", payload: messageEntry }, excludeUserId);
 }
 
+function sendMessage(socket, message) {
+  try {
+    const messageString = JSON.stringify(message);
+    socket.send(messageString);
+  } catch (error) {
+    return error;
+  }
+}
+
+function sendLoggedData(socket, user) {
+  const clientsList = Object.keys(clients).reduce((acc, current) => {
+    return [...acc, { id: current, nickName: clients[current].nickName }];
+  }, []);
+  addAndBroadcastMessage(`${user.nickName} joined`, "bot", user.id);
+  const messagesList = messagesIds.map(id => messages[id]);
+  const loggedMessage = {
+    type: "userEntered",
+    payload: {
+      user,
+      time: Date.now()
+    }
+  };
+  sendMessage(socket, { type: "logged", payload: user });
+  sendMessage(socket, { type: "usersList", payload: clientsList });
+  sendMessage(socket, { type: "lastMessages", payload: messagesList });
+  broadcast(loggedMessage, user.id);
+}
+
 webSocketServer.on("connection", socket => {
-  const id = String(Math.random());
-  clients[id] = { socket };
-  console.log("opened", id);
+  let id;
+
+  console.log("opened", socket);
 
   socket.on("message", function(rawMessage) {
     const incomingMessage = JSON.parse(rawMessage);
     console.log(incomingMessage);
     switch (incomingMessage.event) {
       case "message":
+        console.log(id);
         addAndBroadcastMessage(incomingMessage.payload.messageText, id);
         break;
       case "modifyMessage":
@@ -69,6 +97,7 @@ webSocketServer.on("connection", socket => {
         messages[modifiedId] = modifiedMessageEntry;
         broadcast({ type: "modifyMessage", payload: modifiedMessageEntry });
         break;
+
       case "deleteMessage":
         const deletedId = incomingMessage.payload.id;
         const deletedMessageEntry = {
@@ -78,47 +107,26 @@ webSocketServer.on("connection", socket => {
         };
         broadcast({ type: "deleteMessage", payload: deletedMessageEntry });
         break;
+
       case "setId":
-        const userId = incomingMessage.payload;
-        const restoredNickName =
-          (clients[userId] && clients[userId].nickName) || "";
-        if (restoredNickName) {
-          addAndBroadcastMessage(`${restoredNickName} joined`, "bot", String(id));          
+        id = incomingMessage.payload;
+        const restoredNickName = (clients[id] && clients[id].nickName) || "";
+        if (!restoredNickName) {
+          sendMessage(socket, { type: "noAuth", id });
+          break;
         }
-        socket.send(
-          JSON.stringify({
-            type: "restored",
-            payload: restoredNickName
-          })
-        );
+        if (clients[id].online) {
+          sendLoggedData(socket, { id, nickName: restoredNickName });
+        } else {
+          
+        }
         break;
-      case "setNickName":
-        clients[id].nickName = incomingMessage.payload;
-        const clientsList = Object.keys(clients).reduce((acc, current) => {
-          return [...acc, { id: current, nickName: clients[current].nickName }];
-        }, []);
-        const messagesList = messagesIds.map(id => messages[id]);
-        const user = {  id, nickName: incomingMessage.payload };
-        const loggedMessage = {
-          type: "userEntered",
-          payload: {
-            user,
-            time: Date.now()
-          }
-        };
-        addAndBroadcastMessage(
-          `${incomingMessage.payload} joined`,
-          "bot",
-          String(id)
-        );
-        socket.send(JSON.stringify({ type: "logged", payload: user }));
-        socket.send(
-          JSON.stringify({ type: "usersList", payload: clientsList })
-        );
-        socket.send(
-          JSON.stringify({ type: "lastMessages", payload: messagesList })
-        );
-        broadcast(loggedMessage, id);
+
+      case "register":
+        id = String(Math.random());
+        clients[id] = { socket, nickName: incomingMessage.payload };
+        const user = { id, nickName: incomingMessage.payload };
+        sendLoggedData(socket, user);
         break;
 
       default:
@@ -127,6 +135,9 @@ webSocketServer.on("connection", socket => {
   });
 
   socket.on("close", function() {
+    if (!id || !clients[id]) {
+      return;
+    }
     addAndBroadcastMessage(`${clients[id].nickName} left`, "bot", id);
     broadcast(
       {
@@ -136,7 +147,7 @@ webSocketServer.on("connection", socket => {
           time: Date.now()
         }
       },
-      String(id)
+      id
     );
   });
 });

@@ -18,7 +18,7 @@ const ChatView = styled.section`
   margin: 0 auto;
   justify-content: start;
   font-size: 24px;
-  
+
 `;
 
 const ChatList = styled.div`
@@ -47,7 +47,7 @@ interface IChatAppProps {
   messages: IMessage[];
   users: IUser[];
   userId: string;
-  sendMessage: (message: IMappedMessage) => void;
+  sendMessage: (message: IMessage) => void;
 }
 
 export function ChatApp({
@@ -100,8 +100,10 @@ export function ChatApp({
 
   const handleChange = (message: string) => {
     const isModified = editingMessageIndex > -1;
-    const messageToSend: IMappedMessage = {
-      ...mappedMessages[editingMessageIndex],
+    const { id = '', authorId = '' } = mappedMessages[editingMessageIndex] || {} ;
+    const messageToSend: IMessage = {
+      id,
+      authorId,
       messageText: message,
       isModified
     };
