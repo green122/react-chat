@@ -84,16 +84,16 @@ export const useWebsocket = (dispatch: Dispatch<IAction>) => {
           break;
         case "logged":
           dispatch({ type: EActionTypes.Logged, payload });
+          dispatch({ type: EActionTypes.AuthProcessing, payload: false});          
           cookie.set('chat-ts-app', payload.id);
-          break;
-        case "restored":
-            dispatch({ type: EActionTypes.AuthProcessing, payload: false});
-            dispatch({ type: EActionTypes.SetNickName, payload });
-            emitEvent('setNickName', payload);
-            break;
+          break;       
         case "modifyMessage":
           dispatch({ type: EActionTypes.EditMessage, payload });
           break;
+        case "noAuth":
+            dispatch({ type: EActionTypes.SetNickName, payload: '' });
+            dispatch({ type: EActionTypes.AuthProcessing, payload: false});
+            break;
         case "deleteMessage":
           dispatch({ type: EActionTypes.DeleteMessage, payload });
           break;
@@ -132,7 +132,7 @@ export const useWebsocket = (dispatch: Dispatch<IAction>) => {
     }
   }
 
-  function sendMessage(message: IMappedMessage) {
+  function sendMessage(message: IMessage) {
     const eventName = message.isModified
       ? "modifyMessage"
       : message.isDeleted

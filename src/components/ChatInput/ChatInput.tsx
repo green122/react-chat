@@ -18,6 +18,7 @@ const ChatInputView = styled.textarea`
   border: 1px solid darkgrey;
   height: 24px;
   padding: 20px;
+  outline: none;
   &[placeholder] {
     font-size: 24px;
     padding-left: 10px;
@@ -40,9 +41,11 @@ export function ChatInput({
 
   useEffect(() => {
     const element = textRef.current as HTMLElement;
+    const topPadding = +(window.getComputedStyle(element).getPropertyValue('padding-top').match(/^\d*/) || [])[0];
+    const bottomPadding = +(window.getComputedStyle(element).getPropertyValue('padding-bottom').match(/^\d*/) || [])[0];
     console.log(element.scrollHeight);
-    // element.style.height = "5px";
-    // element.style.height = element.scrollHeight + "px";
+    element.style.height = "5px";
+    element.style.height = element.scrollHeight - topPadding - bottomPadding + "px";
   }, [message]);
 
   if (value !== prevValue) {
@@ -54,6 +57,7 @@ export function ChatInput({
     if (evt.key === "Enter") {
       onSubmit(message);
       setMessage("");
+      textRef.current && textRef.current.focus();
     }
   };
 
