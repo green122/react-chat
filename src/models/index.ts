@@ -13,7 +13,7 @@ export interface IMessage {
 }
 
 export interface IElementBlock {
-  type: string;
+  type: EMessageBlocks;
   text: string;
 }
 
@@ -54,4 +54,10 @@ export interface State {
 export enum ETabs {
   Participants = "Participants",
   Chat = "Chat"
+}
+
+export enum EMessageBlocks {
+  Link ='link',
+  PlainText = 'text',
+  InfoText = 'info'
 }

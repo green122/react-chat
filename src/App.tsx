@@ -29,9 +29,9 @@ const App: React.FC = () => {
     if (!userCookie || !connected) {
       return;
     }
-    dispatch({ type: EActionTypes.AuthProcessing, payload: true});
-    emitEvent('setId', userCookie);
-  }, [connected]);  
+    dispatch({ type: EActionTypes.AuthProcessing, payload: true });
+    emitEvent("setId", userCookie);
+  }, [connected]);
 
   const { isAuthProcessing, nickName } = state;
 
@@ -45,7 +45,10 @@ const App: React.FC = () => {
         sendMessage={sendMessage}
       />
     ) : state.connected ? (
-      <ChatInput onSubmit={nickName => emitEvent('register', nickName)} value="" />
+      <ChatInput
+        onSubmit={nickName => emitEvent("register", { nickName })}
+        value=""
+      />
     ) : null;
   };
 

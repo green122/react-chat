@@ -18,7 +18,10 @@ const ChatView = styled.section`
   margin: 0 auto;
   justify-content: start;
   font-size: 24px;
-
+  @media(max-width: 330px){
+    height: 100vh;
+    font-size: 16px;
+  }
 `;
 
 const ChatList = styled.div`
@@ -30,6 +33,9 @@ const ChatList = styled.div`
   overflow-x: hidden;
   display: flex;
   flex-direction: column-reverse;
+  @media(max-width: 330px){
+   padding: 12px;
+  }
 `;
 
 const ScrollButton = styled.button`
@@ -93,7 +99,9 @@ export function ChatApp({
       mappedMessages.length - Number(event.currentTarget.dataset.tag) - 1;
     const messageToSend: IMappedMessage = {
       ...mappedMessages[messageIndex],
-      isDeleted: true
+      isDeleted: true,
+      isModified: false
+
     };
     sendMessage(messageToSend);
   };
