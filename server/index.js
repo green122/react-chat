@@ -82,7 +82,11 @@ webSocketServer.on("connection", socket => {
         if (getClientsConnections(id) === 1) {
           broadCastMessage({ type: "joined", payload: client }, id);
           broadCastChatMessage(
-            { messageText: `${client.nickName} joined`, authorId: "bot" },
+            {
+              messageText: `${client.nickName} joined`,
+              authorId: "bot",
+              userId: id
+            },
             id
           );
         }

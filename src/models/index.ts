@@ -39,13 +39,15 @@ export enum EActionTypes {
   UserJoined = "User Joined",
   UserLeft = "User Left",
   SetNickName = "Set Nick Name",
-  AuthProcessing = "AuthProcessing"
+  AuthProcessing = "AuthProcessing",
+  ConnectionError = 'Connection Error'
 }
 
 export interface State {
   userId: string;
   nickName: string;
   isAuthProcessing: boolean;
+  connectionError: boolean;
   connected: boolean;
   users: IUser[];
   messages: IMessage[];
@@ -61,3 +63,5 @@ export enum EMessageBlocks {
   PlainText = 'text',
   InfoText = 'info'
 }
+
+export type SubmitFunctionType = (value: string) => void;

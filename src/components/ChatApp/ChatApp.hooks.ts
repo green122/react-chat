@@ -3,8 +3,7 @@ import {
   State,
   EActionTypes,
   IMessage,
-  IAction,
-  IMappedMessage
+  IAction
 } from "../../models";
 import cookie from "js-cookie";
 
@@ -16,6 +15,7 @@ const initialState: State = {
   userId: "",
   nickName: "",
   isAuthProcessing: false,
+  connectionError: false,
   connected: false,
   users: [],
   messages
@@ -38,6 +38,8 @@ const reducer = (state: State, action: IAction): State => {
       return { ...state, users: [...state.users, payload] };
     case EActionTypes.SetConnected:
       return { ...state, connected: payload };
+    case EActionTypes.ConnectionError:
+      return { ...state, connectionError: payload };
     case EActionTypes.GetMessagesList:
       return { ...state, messages: payload };
     case EActionTypes.UserLeft:
@@ -45,7 +47,8 @@ const reducer = (state: State, action: IAction): State => {
         ...state,
         users: state.users.filter(({ id }) => id !== payload.user.id)
       };
-    case EActionTypes.EditMessage, EActionTypes.DeleteMessage:
+    case EActionTypes.EditMessage:
+    case EActionTypes.DeleteMessage:
       const messageIndex = state.messages.findIndex(
         ({ id }) => id === payload.id
       );
@@ -84,16 +87,16 @@ export const useWebsocket = (dispatch: Dispatch<IAction>) => {
           break;
         case "logged":
           dispatch({ type: EActionTypes.Logged, payload });
-          dispatch({ type: EActionTypes.AuthProcessing, payload: false});          
-          cookie.set('chat-ts-app', payload.id);
-          break;       
+          dispatch({ type: EActionTypes.AuthProcessing, payload: false });
+          cookie.set("chat-ts-app", payload.id);
+          break;
         case "modifyMessage":
           dispatch({ type: EActionTypes.EditMessage, payload });
           break;
         case "noAuth":
-            dispatch({ type: EActionTypes.SetNickName, payload: '' });
-            dispatch({ type: EActionTypes.AuthProcessing, payload: false});
-            break;
+          dispatch({ type: EActionTypes.SetNickName, payload: "" });
+          dispatch({ type: EActionTypes.AuthProcessing, payload: false });
+          break;
         case "deleteMessage":
           dispatch({ type: EActionTypes.DeleteMessage, payload });
           break;
@@ -117,13 +120,17 @@ export const useWebsocket = (dispatch: Dispatch<IAction>) => {
     client.onopen = () => {
       dispatch({ type: EActionTypes.SetConnected, payload: true });
     };
-    client.onclose = () => {
-      dispatch({ type: EActionTypes.SetConnected, payload: false });
+    client.onclose = event => {
+      if (event.wasClean) {
+        dispatch({ type: EActionTypes.SetConnected, payload: false });
+      } else {
+        dispatch({ type: EActionTypes.ConnectionError, payload: true });
+      }
     };
     return () => {
       client.close();
     };
-  }, [dispatch]);  
+  }, [dispatch]);
 
   function emitEvent(type: string, payload: any) {
     if (isClientReady()) {

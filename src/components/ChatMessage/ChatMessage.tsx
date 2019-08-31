@@ -1,9 +1,9 @@
-import React, { SyntheticEvent, Fragment, createElement } from "react";
+import React, { SyntheticEvent, Fragment, useState } from "react";
 import styled from "styled-components";
 import { ReactComponent as Pen } from "../../ui-res/pen-solid.svg";
 import { ReactComponent as Delete } from "../../ui-res/times-solid.svg";
 import { IMappedMessage, IElementBlock, EMessageBlocks } from "../../models";
-import { JSXElement } from "@babel/types";
+import { PreviewLink } from "../LinkPreview/LinkPreview";
 
 const Actions = styled.div`
   width: 50px;
@@ -35,6 +35,7 @@ const Author = styled.p`
 const Time = styled.p`
   display: inline-block;
   margin: 0;
+  margin-left: 10px;
   color: darkgray;
 `;
 
@@ -49,7 +50,7 @@ const Message = styled.div`
   }
   .info-message {
     color: gray;
-  } 
+  }
 `;
 
 const Modified = styled.p`
@@ -61,6 +62,10 @@ const PenIcon = styled(Pen)`
   height: 20px;
   color: darkgray;
   cursor: pointer;
+  @media (max-width: 320px) {
+    width: 10px;
+    height: 10px;
+  }
 `;
 
 const DeleteIcon = styled(Delete)`
@@ -68,6 +73,10 @@ const DeleteIcon = styled(Delete)`
   height: 20px;
   color: darkgray;
   cursor: pointer;
+  @media (max-width: 320px) {
+    width: 10px;
+    height: 10px;
+  }
 `;
 
 interface ChatMessageProps {
@@ -78,18 +87,32 @@ interface ChatMessageProps {
   onDelete: (event: SyntheticEvent) => void;
 }
 
-export function convertBlockToJSX(block: IElementBlock) {
+type HandlerType = (action: string, url: string) => () => void;
+
+export function convertBlockToJSX(
+  block: IElementBlock,
+  hoverHanler: HandlerType
+) {
   let JSXResult: JSX.Element | null = null;
   switch (block.type) {
     case EMessageBlocks.Link:
-      JSXResult = <a href={block.text}>{block.text}</a>;
+      JSXResult = (
+        <div
+          onMouseOver={hoverHanler("enter", block.text)}
+          onMouseOut={hoverHanler("leave", block.text)}
+        >
+          <a target="_blank" rel="noopener noreferrer" href={"//" + block.text}>
+            {block.text}
+          </a>
+        </div>
+      );
       break;
     case EMessageBlocks.PlainText:
       JSXResult = <p className="plain-message">{block.text}</p>;
       break;
     case EMessageBlocks.InfoText:
       JSXResult = <p className="info-message">{block.text}</p>;
-      break;  
+      break;
     default:
       break;
   }
@@ -111,9 +134,23 @@ export function ChatMessage({
     isDeleted
   } = messageEntry;
 
+  const [showLinkPreview, setShowLinkPreview] = useState(false);
+  const [url, setUrl] = useState("");
+
+  const mouseEnterHandler = (action: string, text: string) => () => {
+    const hasEnteredLink = action === "enter";
+    
+    setShowLinkPreview(hasEnteredLink);
+    setUrl(hasEnteredLink ? text : "");
+  };
+
   const messageContent = (
-    <Fragment>{messageBlocks.map(convertBlockToJSX)}</Fragment>
+    <Fragment>
+      {messageBlocks.map(block => convertBlockToJSX(block, mouseEnterHandler))}
+    </Fragment>
   );
+
+  console.log(showLinkPreview);
 
   return (
     <MessageWrapper className={editable ? `editable` : ""}>
@@ -125,6 +162,7 @@ export function ChatMessage({
             {messageContent}
             {isModified && <Modified>(edited)</Modified>}
           </Message>
+          {showLinkPreview && <PreviewLink url={url} />}          
           <Actions>
             <PenIcon data-tag={tag} onClick={onEdit} />
             <DeleteIcon data-tag={tag} onClick={onDelete} />

@@ -7,11 +7,18 @@ const Tabs = styled.section`
   background-color: #e9e9e9;
 `;
 
+const Tab = styled.p`
+  text-align: center;
+  vertical-align: center;
+`;
+
 const TabContainer = styled.div`
   cursor: pointer;
-  height: 80px;
+  height: 80px;  
   width: ${(props: { width: number }) => props.width}%;
   flex-grow: 1;
+  ${Tab} {    
+  }
   &.active {
     background-color: white;
     border: 2px solid lightgray;
@@ -25,11 +32,9 @@ const TabContainer = styled.div`
       border-right: none;
     }
   }
-`;
-
-const Tab = styled.p`
-  text-align: center;
-  vertical-align: center;
+  @media(max-width: 330px){
+    height: 40px;
+  }
 `;
 
 interface ChatTabsProps {
