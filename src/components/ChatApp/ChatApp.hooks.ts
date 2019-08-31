@@ -45,7 +45,7 @@ const reducer = (state: State, action: IAction): State => {
         ...state,
         users: state.users.filter(({ id }) => id !== payload.user.id)
       };
-    case (EActionTypes.EditMessage, EActionTypes.DeleteMessage):
+    case EActionTypes.EditMessage, EActionTypes.DeleteMessage:
       const messageIndex = state.messages.findIndex(
         ({ id }) => id === payload.id
       );
@@ -97,14 +97,14 @@ export const useWebsocket = (dispatch: Dispatch<IAction>) => {
         case "deleteMessage":
           dispatch({ type: EActionTypes.DeleteMessage, payload });
           break;
-        case "usersList":
+        case "users":
           dispatch({ type: EActionTypes.LoadUsers, payload });
           break;
-        case "lastMessages":
+        case "history":
           dispatch({ type: EActionTypes.GetMessagesList, payload });
           break;
-        case "userEntered":
-          dispatch({ type: EActionTypes.UserJoined, payload: payload.user });
+        case "joined":
+          dispatch({ type: EActionTypes.UserJoined, payload });
           break;
         case "userLeft":
           dispatch({ type: EActionTypes.UserLeft, payload });
@@ -125,9 +125,9 @@ export const useWebsocket = (dispatch: Dispatch<IAction>) => {
     };
   }, [dispatch]);  
 
-  function emitEvent(event: string, payload: any) {
+  function emitEvent(type: string, payload: any) {
     if (isClientReady()) {
-      const data = JSON.stringify({ event, payload });
+      const data = JSON.stringify({ type, payload });
       client.send(data);
     }
   }

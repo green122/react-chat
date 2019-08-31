@@ -7,7 +7,6 @@ import React, {
 } from "react";
 import styled from "styled-components";
 
-
 const ChatInputView = styled.textarea`
   resize: none;
   overflow: hidden;
@@ -40,12 +39,21 @@ export function ChatInput({
   );
 
   useEffect(() => {
+    if (!message) {
+      return;
+    }
     const element = textRef.current as HTMLElement;
-    const topPadding = +(window.getComputedStyle(element).getPropertyValue('padding-top').match(/^\d*/) || [])[0];
-    const bottomPadding = +(window.getComputedStyle(element).getPropertyValue('padding-bottom').match(/^\d*/) || [])[0];
-    console.log(element.scrollHeight);
+    const topPadding = +(window
+      .getComputedStyle(element)
+      .getPropertyValue("padding-top")
+      .match(/^\d*/) || [])[0];
+    const bottomPadding = +(window
+      .getComputedStyle(element)
+      .getPropertyValue("padding-bottom")
+      .match(/^\d*/) || [])[0];
     element.style.height = "5px";
-    element.style.height = element.scrollHeight - topPadding - bottomPadding + "px";
+    element.style.height =
+      element.scrollHeight - topPadding - bottomPadding + "px";
   }, [message]);
 
   if (value !== prevValue) {

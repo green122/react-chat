@@ -1,4 +1,4 @@
-import { IMessage, IMappedMessage, IUser, IElementBlock } from "../models";
+import { IMessage, IMappedMessage, IUser, IElementBlock, EMessageBlocks } from "../models";
 
 export function getTimeString(time: number) {
   const date = new Date(time);
@@ -7,14 +7,18 @@ export function getTimeString(time: number) {
 }
 
 const urlRegEx = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/;
-export function parseWithContent(message: string): IElementBlock[] {
-  const splittedByUrl = message.split(urlRegEx);
+export function parseToBlocks({messageText = '', authorId}: IMessage): IElementBlock[] {
+  const splittedByUrl = messageText.split(urlRegEx);
+  if (authorId === 'bot') {
+    return [{type: EMessageBlocks.InfoText, text: messageText}]
+  }
   const mappedToBlocks: IElementBlock[] = splittedByUrl
     .filter(Boolean)
     .map(text => {
-      const type = urlRegEx.test(text) ? "a" : "p";
+      const type = urlRegEx.test(text) ? EMessageBlocks.Link : EMessageBlocks.PlainText;
       return { type, text: text.trim() };
     });
+
   return mappedToBlocks;
 }
 
@@ -31,7 +35,7 @@ export function getMappedMessages(
               .nickName;
       return {
         ...message,
-        messageBlocks: parseWithContent(message.messageText),
+        messageBlocks: parseToBlocks(message),
         author,
         timeView: getTimeString(message.time || 0)
       };

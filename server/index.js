@@ -1,153 +1,134 @@
 const WebSocketServer = new require("ws");
 const server = require("express")();
-
+const createClientsHandlers = require("./clients.controller");
+const createMessagesController = require("./messages.controller");
+const createChatMessagesController = require("./chatMessages.controller");
 server.use(require("cors")());
-
-const clients = {};
-
-server.get("/auth", (request, response) => {
-  const userId = String(request.headers["chat-ts-app"]);
-  console.log(clients, userId);
-  const client = (clients[userId] && clients[userId].nickName) || {};
-  response.json({ nickName: client });
-});
-
-server.listen(4000, () => {
-  console.log("server started");
-});
 
 const webSocketServer = new WebSocketServer.Server({
   port: 8081
 });
 
-const messages = {};
-const messagesIds = [];
-
-function broadcast(message, excludeUser) {
-  for (const key in clients) {
-    const clientSocket = clients[key].socket;
-    if (key !== excludeUser && clientSocket.readyState === clientSocket.OPEN) {
-      sendMessage(clientSocket, message);
-    }
-  }
+function broadCastChatMessage(message, excludeUserId) {
+  const addedMessage = addNewMessage(message);
+  broadCastMessage({ type: "message", payload: addedMessage }, excludeUserId);
 }
 
-function addAndBroadcastMessage(messageText, authorId, excludeUserId) {
-  const messageId = String(Date.now());
-  const messageEntry = {
-    id: messageId,
-    messageText,
-    time: Date.now(),
-    authorId
-  };
-  messages[messageId] = messageEntry;
-  messagesIds.push(messageId);
-  broadcast({ type: "message", payload: messageEntry }, excludeUserId);
-}
+const {
+  addNewMessage,
+  deleteMessage,
+  getMessages,
+  modifyMessage
+} = createChatMessagesController();
+const {
+  addClient,
+  deleteConnection,
+  broadCastMessage,
+  getClientsConnections,
+  sendMessage,
+  sendMessageToClientById,
+  getClients,
+  getClientById
+} = createClientsHandlers();
 
-function sendMessage(socket, message) {
-  try {
-    const messageString = JSON.stringify(message);
-    socket.send(messageString);
-  } catch (error) {
-    return error;
-  }
-}
-
-function sendLoggedData(socket, user) {
-  const clientsList = Object.keys(clients).reduce((acc, current) => {
-    return [...acc, { id: current, nickName: clients[current].nickName }];
-  }, []);
-  addAndBroadcastMessage(`${user.nickName} joined`, "bot", user.id);
-  const messagesList = messagesIds.map(id => messages[id]);
-  const loggedMessage = {
-    type: "userEntered",
-    payload: {
-      user,
-      time: Date.now()
-    }
-  };
-  sendMessage(socket, { type: "logged", payload: user });
-  sendMessage(socket, { type: "usersList", payload: clientsList });
-  sendMessage(socket, { type: "lastMessages", payload: messagesList });
-  broadcast(loggedMessage, user.id);
+function sendDataToLoggedUser(id) {
+  sendMessageToClientById({ type: "users", payload: getClients() }, id);
+  sendMessageToClientById(
+    {
+      type: "history",
+      payload: getMessages().filter(({ userId }) => userId !== id)
+    },
+    id
+  );
 }
 
 webSocketServer.on("connection", socket => {
   let id;
-
-  console.log("opened", socket);
-
-  socket.on("message", function(rawMessage) {
-    const incomingMessage = JSON.parse(rawMessage);
-    console.log(incomingMessage);
-    switch (incomingMessage.event) {
-      case "message":
-        console.log(id);
-        addAndBroadcastMessage(incomingMessage.payload.messageText, id);
-        break;
-      case "modifyMessage":
-        const modifiedId = incomingMessage.payload.id;
-        const modifiedMessageEntry = {
-          ...messages[modifiedId],
-          ...incomingMessage.payload,
-          isModified: true,
-          time: Date.now()
-        };
-        messages[modifiedId] = modifiedMessageEntry;
-        broadcast({ type: "modifyMessage", payload: modifiedMessageEntry });
-        break;
-
-      case "deleteMessage":
-        const deletedId = incomingMessage.payload.id;
-        const deletedMessageEntry = {
-          ...messages[deletedId],
-          isDeleted: true,
-          time: Date.now()
-        };
-        broadcast({ type: "deleteMessage", payload: deletedMessageEntry });
-        break;
-
-      case "setId":
-        id = incomingMessage.payload;
-        const restoredNickName = (clients[id] && clients[id].nickName) || "";
-        if (!restoredNickName) {
-          sendMessage(socket, { type: "noAuth", id });
-          break;
+  socket.on(
+    "message",
+    createMessagesController({
+      // set all users data for a new client
+      register: payload => {
+        id = String(Math.random()).slice(2);
+        addClient(id, { ...payload, id, socket });
+        broadCastMessage({ type: "joined", payload: { ...payload, id } }, id);
+        broadCastChatMessage(
+          {
+            messageText: `${payload.nickName} joined`,
+            authorId: "bot",
+            userId: id
+          },
+          id
+        );
+        sendMessage(socket, { type: "logged", payload: { ...payload, id } });
+        sendDataToLoggedUser(id);
+      },
+      modifyMessage: payload => {
+        const modifiedMessage = modifyMessage(payload);
+        broadCastMessage({ type: "modifyMessage", payload: modifiedMessage });
+      },
+      deleteMessage: payload => {
+        const deletedMessage = deleteMessage(payload.id);
+        broadCastMessage({ type: "deleteMessage", payload: deletedMessage });
+      },
+      setId: payloadId => {
+        const client = getClientById(payloadId);
+        if (!client || !client.nickName) {
+          sendMessage(socket, { type: "noAuth", id: payloadId });
+          return;
         }
-        if (clients[id].online) {
-          sendLoggedData(socket, { id, nickName: restoredNickName });
-        } else {
-          
+        addClient(payloadId, { id: payloadId, socket });
+        id = payloadId;
+        if (getClientsConnections(id) === 1) {
+          broadCastMessage({ type: "joined", payload: client }, id);
+          broadCastChatMessage(
+            { messageText: `${client.nickName} joined`, authorId: "bot" },
+            id
+          );
         }
-        break;
+        sendMessage(socket, {
+          type: "logged",
+          payload: { nickName: client.nickName, id }
+        });
+        sendDataToLoggedUser(id);
+      },
+      message: message => broadCastChatMessage({ ...message, authorId: id })
+    })
+  );
 
-      case "register":
-        id = String(Math.random());
-        clients[id] = { socket, nickName: incomingMessage.payload };
-        const user = { id, nickName: incomingMessage.payload };
-        sendLoggedData(socket, user);
-        break;
+  //     case "setId":
+  //       if (clients[id].online) {
+  //         sendLoggedData(socket, { id, nickName: restoredNickName });
+  //       } else {
+  //       }
+  //       break;
 
-      default:
-        break;
-    }
-  });
+  //     case "register":
+  //       clients[id] = { socket, nickName: incomingMessage.payload };
+  //       const user = { id, nickName: incomingMessage.payload };
+  //       sendLoggedData(socket, user);
+  //       break;
+
+  //     default:
+  //       break;
+  //   }
+  // });
 
   socket.on("close", function() {
-    if (!id || !clients[id]) {
+    if (!id) {
       return;
     }
-    addAndBroadcastMessage(`${clients[id].nickName} left`, "bot", id);
-    broadcast(
-      {
-        type: "userLeft",
-        payload: {
-          user: { id, nickName: clients[id].nickName },
-          time: Date.now()
-        }
-      },
-      id
-    );
+    const connectionsLeft = deleteConnection(id, socket);
+    console.log(connectionsLeft);
+    if (!connectionsLeft) {
+      broadCastChatMessage(
+        {
+          messageText: `${getClientById(id).nickName} left`,
+          authorId: "bot",
+          userId: id
+        },
+        id
+      );
+    }
   });
 });

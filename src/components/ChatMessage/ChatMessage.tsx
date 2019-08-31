@@ -2,7 +2,8 @@ import React, { SyntheticEvent, Fragment, createElement } from "react";
 import styled from "styled-components";
 import { ReactComponent as Pen } from "../../ui-res/pen-solid.svg";
 import { ReactComponent as Delete } from "../../ui-res/times-solid.svg";
-import { IMappedMessage, IElementBlock } from "../../models";
+import { IMappedMessage, IElementBlock, EMessageBlocks } from "../../models";
+import { JSXElement } from "@babel/types";
 
 const Actions = styled.div`
   width: 50px;
@@ -46,6 +47,9 @@ const Message = styled.div`
     word-break: break-all;
     display: inline;
   }
+  .info-message {
+    color: gray;
+  } 
 `;
 
 const Modified = styled.p`
@@ -75,11 +79,21 @@ interface ChatMessageProps {
 }
 
 export function convertBlockToJSX(block: IElementBlock) {
-  return block.type === "a" ? (
-    <a href={block.text}>{block.text}</a>
-  ) : (
-    <p>{block.text}</p>
-  );
+  let JSXResult: JSX.Element | null = null;
+  switch (block.type) {
+    case EMessageBlocks.Link:
+      JSXResult = <a href={block.text}>{block.text}</a>;
+      break;
+    case EMessageBlocks.PlainText:
+      JSXResult = <p className="plain-message">{block.text}</p>;
+      break;
+    case EMessageBlocks.InfoText:
+      JSXResult = <p className="info-message">{block.text}</p>;
+      break;  
+    default:
+      break;
+  }
+  return JSXResult;
 }
 
 export function ChatMessage({
