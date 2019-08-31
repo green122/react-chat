@@ -6,6 +6,7 @@ import React, {
   RefObject
 } from "react";
 import styled from "styled-components";
+import { SubmitFunctionType } from "../../models";
 
 const ChatInputView = styled.textarea`
   resize: none;
@@ -22,9 +23,17 @@ const ChatInputView = styled.textarea`
     font-size: 24px;
     padding-left: 10px;
   }
+  @media (max-width: 320px) {
+    margin: 0px 10px 0px 10px;
+    padding: 10px;
+    &[placeholder] {
+      font-size: 16px;
+      padding-left: 10px;
+    }
+  }
 `;
 
-type SubmitFunctionType = (value: string) => void;
+
 export function ChatInput({
   onSubmit,
   value
@@ -69,12 +78,19 @@ export function ChatInput({
     }
   };
 
+  const handleChange = (evt: any) => {
+    if (evt.target.value.charCodeAt(0) == 10){
+      return;
+    }
+    setMessage(evt.target.value);
+  }
+
   return (
     <ChatInputView
       value={message}
       ref={textRef}
       placeholder="Message"
-      onChange={evt => setMessage(evt.target.value)}
+      onChange={handleChange}
       onKeyPress={keyHandler}
     />
   );

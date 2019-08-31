@@ -1,4 +1,4 @@
-import React, { useRef, RefObject, useEffect, useState } from "react";
+import React, { useRef, RefObject, useEffect, useState, Fragment } from "react";
 import styled from "styled-components";
 import { ChatInput } from "../ChatInput/ChatInput";
 import { IUser, IMappedMessage, ETabs, IMessage } from "../../models";
@@ -18,14 +18,17 @@ const ChatView = styled.section`
   margin: 0 auto;
   justify-content: start;
   font-size: 24px;
-  @media(max-width: 330px){
+  @media (max-width: 320px) {
     height: 100vh;
     font-size: 16px;
+    padding-bottom: 10px;
   }
 `;
 
 const ChatList = styled.div`
   padding: 24px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   height: 0px;
   flex-grow: 1;
   background-color: white;
@@ -33,20 +36,25 @@ const ChatList = styled.div`
   overflow-x: hidden;
   display: flex;
   flex-direction: column-reverse;
-  @media(max-width: 330px){
-   padding: 12px;
+  @media (max-width: 320px) {
+    padding: 12px;
   }
 `;
 
 const ScrollButton = styled.button`
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  width: 80px;
+  height: 30px;
+  border-radius: 10px;
+  font-size: 16px;
   border: 0;
-  position: absolute;
+  position: fixed;
+  right: calc(50% - 200px);
   cursor: pointer;
   background: white;
-  box-shadow: 5px 5px 5px gray;
+  box-shadow: 5px 5px 23px grey;
+  @media (max-width: 320px) {
+    right: calc(50% - 200px);
+  }
 `;
 
 interface IChatAppProps {
@@ -56,17 +64,21 @@ interface IChatAppProps {
   sendMessage: (message: IMessage) => void;
 }
 
+export default ChatApp;
+
 export function ChatApp({
   messages,
   users,
   sendMessage,
   userId
 }: IChatAppProps) {
-  const chatViewRef: RefObject<HTMLDivElement> = useRef({} as HTMLDivElement);
-  const [newMessagesAtBottom, setNewMessagesFlag] = useState(false);
+  let chatViewRef: RefObject<HTMLDivElement> = useRef({} as HTMLDivElement);
+  const [newMessagesAtBottom, setNewMessages] = useState(0);
   const [editingMessageIndex, setEditingMessageIndex] = useState(-1);
   const [activeTab, setActiveTab] = useState(ETabs.Chat);
   const refToElement = chatViewRef.current as HTMLElement;
+  const scrollPosition = useRef(0);
+  let messagesLength = useRef(messages.length);
 
   const mappedMessages = getMappedMessages(messages, users);
 
@@ -76,7 +88,9 @@ export function ChatApp({
       refToElement.clientHeight + refToElement.scrollTop <
       refToElement.scrollHeight
     ) {
-      setNewMessagesFlag(true);
+      setNewMessages(messages.length - messagesLength.current);
+    } else {
+      messagesLength.current = messages.length;
     }
   }, [messages.length, refToElement]);
 
@@ -85,7 +99,12 @@ export function ChatApp({
       top: refToElement.scrollHeight,
       behavior: "smooth"
     });
-    setNewMessagesFlag(false);
+    setNewMessages(0);
+  };
+
+  const onScroll = (evt: any) => {
+    const position = evt.target.scrollTop;
+    scrollPosition.current = position;
   };
 
   const handleEditMessage = (event: any) => {
@@ -101,14 +120,14 @@ export function ChatApp({
       ...mappedMessages[messageIndex],
       isDeleted: true,
       isModified: false
-
     };
     sendMessage(messageToSend);
   };
 
   const handleChange = (message: string) => {
     const isModified = editingMessageIndex > -1;
-    const { id = '', authorId = '' } = mappedMessages[editingMessageIndex] || {} ;
+    const { id = "", authorId = "" } =
+      mappedMessages[editingMessageIndex] || {};
     const messageToSend: IMessage = {
       id,
       authorId,
@@ -133,35 +152,38 @@ export function ChatApp({
         tabs={tabs}
       />
       {activeTab === ETabs.Chat && (
-        <ChatList ref={chatViewRef}>
-          {mappedMessages
-            .slice()
-            .reverse()
-            .map((messageEntry, index) => (
-              <ChatMessage
-                key={index}
-                tag={index}
-                editable={messageEntry.authorId === userId}
-                onEdit={handleEditMessage}
-                onDelete={handleDeleteMessage}
-                messageEntry={messageEntry}
-              />
-            ))}
-        </ChatList>
+        <Fragment>
+          <ChatList ref={chatViewRef} onScroll={onScroll}>
+            {mappedMessages
+              .slice()
+              .reverse()
+              .map((messageEntry, index) => (
+                <ChatMessage
+                  key={messageEntry.id}
+                  tag={index}
+                  editable={messageEntry.authorId === userId}
+                  onEdit={handleEditMessage}
+                  onDelete={handleDeleteMessage}
+                  messageEntry={messageEntry}
+                />
+              ))}
+            {newMessagesAtBottom ? (
+              <ScrollButton onClick={scrollToBottom}>
+                {newMessagesAtBottom} new
+              </ScrollButton>
+            ) : null}
+          </ChatList>
+          <ChatInput
+            onSubmit={handleChange}
+            value={
+              editingMessageIndex > -1
+                ? mappedMessages[editingMessageIndex].messageText
+                : ""
+            }
+          />
+        </Fragment>
       )}
       {activeTab === ETabs.Participants && <UsersList users={users} />}
-      {/* <ScrollButton onClick={scrollToBottom}>+</ScrollButton> */}
-      {newMessagesAtBottom && (
-        <ScrollButton onClick={scrollToBottom}>+</ScrollButton>
-      )}
-      <ChatInput
-        onSubmit={handleChange}
-        value={
-          editingMessageIndex > -1
-            ? mappedMessages[editingMessageIndex].messageText
-            : ""
-        }
-      />
     </ChatView>
   );
 }
