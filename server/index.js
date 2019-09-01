@@ -1,7 +1,7 @@
 const express = require("express");
 const server = express();
 const path = require('path');
-const port = process.env.PORT || 3001;
+const port = 8080;
 server.use(express.static(__dirname));
 server.use(express.static(__dirname));
 server.use(express.static(path.resolve(__dirname, '../build')));
@@ -59,6 +59,7 @@ function sendDataToLoggedUser(id) {
 }
 
 webSocketServer.on("connection", socket => {
+  console.log('connected');
   let id;
   socket.on(
     "message",

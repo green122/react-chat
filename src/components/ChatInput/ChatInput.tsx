@@ -8,32 +8,7 @@ import React, {
 import styled from "styled-components";
 import { SubmitFunctionType } from "../../models";
 
-const ChatInputView = styled.textarea`
-  resize: none;
-  overflow: hidden;
-  font-family: "Poppins", sans-serif;
-  min-height: 24px;
-  max-height: 100px;
-  margin: 0 30px 10px 10px;
-  border-radius: 20px;
-  border: 1px solid darkgrey;
-  height: 35px;
-  padding: 20px;
-  outline: none;
-  &[placeholder] {
-    font-size: 24px;
-    padding-left: 10px;
-  }
-  @media (max-width: 360px) {
-    margin: 0px 10px 0px 10px;
-    padding: 10px;
-    height: 25px;
-    &[placeholder] {
-      font-size: 16px;
-      padding-left: 10px;
-    }
-  }
-`;
+
 
 export function ChatInput({
   onSubmit,
@@ -99,3 +74,30 @@ export function ChatInput({
     />
   );
 }
+
+const ChatInputView = styled.textarea`
+  resize: none;
+  overflow: hidden;
+  font-family: "Poppins", sans-serif;
+  min-height: 24px;
+  max-height: 100px;
+  margin: 0 30px 10px 10px;
+  border-radius: 20px;
+  border: 1px solid darkgrey;
+  height: 35px;
+  padding: 20px;
+  outline: none;
+  &[placeholder] {
+    font-size: 24px;
+    padding-left: 10px;
+  }
+  @media (max-width: 360px) {
+    margin: 0px 10px 0px 10px;
+    padding: 10px;
+    height: 25px;
+    &[placeholder] {
+      font-size: 16px;
+      padding-left: 10px;
+    }
+  }
+`;

@@ -16,7 +16,7 @@ const initialState: State = {
   messages
 };
 
-const reducer = (state: State, action: IAction): State => {
+export const reducer = (state: State, action: IAction): State => {
   const { payload } = action;
   switch (action.type) {
     case EActionTypes.AddMessage:
@@ -67,63 +67,65 @@ function isClientReady() {
   return client && client.readyState === client.OPEN;
 }
 
+export const messageHandler = (dispatch: Dispatch<IAction>) => (event: MessageEvent) => {
+  let messageData;
+  try {
+    messageData = JSON.parse(event.data);
+  } catch (error) {
+    console.error("Bad answer");
+    return;
+  }
+  const { payload } = messageData;
+  switch (messageData.type) {
+    case "message":
+      dispatch({ type: EActionTypes.AddMessage, payload });
+      break;
+    case "logged":
+      dispatch({ type: EActionTypes.Logged, payload });
+      dispatch({
+        type: EActionTypes.AuthProcessing,
+        payload: { isProcessing: false, isChecked: true }
+      });
+      cookie.set("chat-ts-app", payload.id);
+      break;
+    case "modifyMessage":
+      dispatch({ type: EActionTypes.EditMessage, payload });
+      break;
+    case "noAuth":
+      dispatch({ type: EActionTypes.SetNickName, payload: "" });
+      dispatch({
+        type: EActionTypes.AuthProcessing,
+        payload: { isProcessing: false, isChecked: true }
+      });
+      break;
+    case "deleteMessage":
+      dispatch({ type: EActionTypes.DeleteMessage, payload });
+      break;
+    case "users":
+      dispatch({ type: EActionTypes.LoadUsers, payload });
+      break;
+    case "history":
+      dispatch({ type: EActionTypes.GetMessagesList, payload });
+      break;
+    case "joined":
+      dispatch({ type: EActionTypes.UserJoined, payload });
+      break;
+    case "userLeft":
+      dispatch({ type: EActionTypes.UserLeft, payload });
+      break;
+    default:
+      break;
+  }
+}
+
 export const useWebsocket = (dispatch: Dispatch<IAction>) => {
   useEffect(() => {
     if (!client) {
-      client = new WebSocket("ws://localhost:8081");
+      client = new WebSocket("wss://ag-react-chat.herokuapp.com:8081");
+      // client = new WebSocket("ws://localhost:8081");
     }
-
-    client.onmessage = (event: MessageEvent) => {
-      let messageData;
-      try {
-        messageData = JSON.parse(event.data);
-      } catch (error) {
-        console.error("Bad answer");
-        return;
-      }
-      const { payload } = messageData;
-      switch (messageData.type) {
-        case "message":
-          dispatch({ type: EActionTypes.AddMessage, payload });
-          break;
-        case "logged":
-          dispatch({ type: EActionTypes.Logged, payload });
-          dispatch({
-            type: EActionTypes.AuthProcessing,
-            payload: { isProcessing: false, isChecked: true }
-          });
-          cookie.set("chat-ts-app", payload.id);
-          break;
-        case "modifyMessage":
-          dispatch({ type: EActionTypes.EditMessage, payload });
-          break;
-        case "noAuth":
-          dispatch({ type: EActionTypes.SetNickName, payload: "" });
-          dispatch({
-            type: EActionTypes.AuthProcessing,
-            payload: { isProcessing: false, isChecked: true }
-          });
-          break;
-        case "deleteMessage":
-          dispatch({ type: EActionTypes.DeleteMessage, payload });
-          break;
-        case "users":
-          dispatch({ type: EActionTypes.LoadUsers, payload });
-          break;
-        case "history":
-          dispatch({ type: EActionTypes.GetMessagesList, payload });
-          break;
-        case "joined":
-          dispatch({ type: EActionTypes.UserJoined, payload });
-          break;
-        case "userLeft":
-          dispatch({ type: EActionTypes.UserLeft, payload });
-          break;
-        default:
-          break;
-      }
-    };
-
+    
+    client.onmessage = messageHandler(dispatch);
     client.onopen = () => {
       dispatch({ type: EActionTypes.SetConnected, payload: true });
     };
