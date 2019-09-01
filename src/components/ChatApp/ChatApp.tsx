@@ -18,7 +18,7 @@ const ChatView = styled.section`
   margin: 0 auto;
   justify-content: start;
   font-size: 24px;
-  @media (max-width: 320px) {
+  @media (max-width: 360px) {
     height: 100vh;
     font-size: 16px;
     padding-bottom: 10px;
@@ -27,26 +27,23 @@ const ChatView = styled.section`
 
 const ChatList = styled.div`
   padding: 24px;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin: 10px 10px 10px 0;  
   height: 0px;
   flex-grow: 1;
   background-color: white;
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column-reverse;
-  @media (max-width: 320px) {
+  @media (max-width: 360px) {
     padding: 12px;
   }
-  &::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  &::-webkit-scrollbar-track {    
     background-color: #f5f5f5;
   }
 
   &::-webkit-scrollbar {
-    width: 10px;
+    width: 7px;
     background-color: #f5f5f5;
   }
 
@@ -66,8 +63,8 @@ const ScrollButton = styled.button`
   cursor: pointer;
   background: white;
   box-shadow: 5px 5px 23px grey;
-  @media (max-width: 320px) {
-    right: calc(50% - 200px);
+  @media (max-width: 360px) {
+    right: calc(50% - 135px);
   }
 `;
 
@@ -93,18 +90,28 @@ export function ChatApp({
   const refToElement = chatViewRef.current as HTMLElement;
   const scrollPosition = useRef(0);
   let messagesLength = useRef(messages.length);
+  const mappedMessages = getMappedMessages(messages, users);  
 
-  const mappedMessages = getMappedMessages(messages, users);
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage){
+      return
+    }
+    if (lastMessage.authorId === userId) {
+      scrollToBottom();
+    }
+  }, [messages])
 
   useEffect(() => {
     if (!refToElement || !refToElement.clientHeight) return;
+    
     if (
       refToElement.clientHeight + refToElement.scrollTop <
       refToElement.scrollHeight
     ) {
       setNewMessages(messages.length - messagesLength.current);
     } else {
-      messagesLength.current = messages.length;
+      messagesLength.current = messages.length;      
     }
   }, [messages.length, refToElement]);
 
@@ -149,11 +156,11 @@ export function ChatApp({
       isModified
     };
     sendMessage(messageToSend);
-    setEditingMessageIndex(-1);
+    setEditingMessageIndex(-1);    
   };
 
   const tabs = [
-    { id: ETabs.Participants, message: `Participants ${users.length}` },
+    { id: ETabs.Participants, message: `Participants (${users.length})` },
     { id: ETabs.Chat, message: "Chat" }
   ];
 

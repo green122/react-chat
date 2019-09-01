@@ -9,15 +9,18 @@ const Tabs = styled.section`
 
 const Tab = styled.p`
   text-align: center;
-  vertical-align: center;
+
+  @media (max-width: 360px) {
+    margin: 10px auto;
+  }
 `;
 
 const TabContainer = styled.div`
   cursor: pointer;
-  height: 80px;  
+  height: 80px;
   width: ${(props: { width: number }) => props.width}%;
   flex-grow: 1;
-  ${Tab} {    
+  ${Tab} {
   }
   &.active {
     background-color: white;
@@ -32,7 +35,7 @@ const TabContainer = styled.div`
       border-right: none;
     }
   }
-  @media(max-width: 330px){
+  @media (max-width: 360px) {
     height: 40px;
   }
 `;

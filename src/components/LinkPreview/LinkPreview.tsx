@@ -13,7 +13,7 @@ const PreviewWrapper = styled.div`
   width: 310px;
   height: 72px;
   z-index: 1;
-  @media (max-width: 320px) {
+  @media (max-width: 360px) {
     width: 250px;
     bottom: 20px;
     height: 50px;
@@ -45,7 +45,7 @@ const InfoTitle = styled.p`
   margin: 0;
   font-size: 20px;
   font-weight: bold;
-  @media (max-width: 320px) {
+  @media (max-width: 360px) {
     font-size: 16px;
   }
 `;
@@ -55,7 +55,7 @@ const InfoDescription = styled.p`
   font-size: 14px;
   font-weight: normal;
   color: darkgrey;
-  @media (max-width: 320px) {
+  @media (max-width: 360px) {
     font-size: 12px;
   }
 `;

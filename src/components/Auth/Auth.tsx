@@ -17,7 +17,7 @@ const NameInput = styled.input`
     font-size: 20px;
     padding-left: 10px;
   }
-  @media (max-width: 320px) {
+  @media (max-width: 360px) {
     width: 250px;
   }
 `;
