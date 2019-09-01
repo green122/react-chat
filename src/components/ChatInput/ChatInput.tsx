@@ -11,12 +11,13 @@ import { SubmitFunctionType } from "../../models";
 const ChatInputView = styled.textarea`
   resize: none;
   overflow: hidden;
+  font-family: "Poppins", sans-serif;
   min-height: 24px;
   max-height: 100px;
   margin: 0 30px 10px 10px;
   border-radius: 20px;
   border: 1px solid darkgrey;
-  height: 24px;
+  height: 35px;
   padding: 20px;
   outline: none;
   &[placeholder] {
@@ -26,13 +27,13 @@ const ChatInputView = styled.textarea`
   @media (max-width: 320px) {
     margin: 0px 10px 0px 10px;
     padding: 10px;
+    height: 25px;
     &[placeholder] {
       font-size: 16px;
       padding-left: 10px;
     }
   }
 `;
-
 
 export function ChatInput({
   onSubmit,
@@ -46,6 +47,7 @@ export function ChatInput({
   const textRef: RefObject<HTMLTextAreaElement> = useRef(
     {} as HTMLTextAreaElement
   );
+  
 
   useEffect(() => {
     if (!message) {
@@ -79,11 +81,13 @@ export function ChatInput({
   };
 
   const handleChange = (evt: any) => {
-    if (evt.target.value.charCodeAt(0) == 10){
+    // ignore line feed character after clearing
+    if (evt.target.value.charCodeAt(0) === 10 && textRef.current) {
+      textRef.current.style.height = "5px";
       return;
     }
     setMessage(evt.target.value);
-  }
+  };
 
   return (
     <ChatInputView

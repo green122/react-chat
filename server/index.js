@@ -100,30 +100,11 @@ webSocketServer.on("connection", socket => {
     })
   );
 
-  //     case "setId":
-  //       if (clients[id].online) {
-  //         sendLoggedData(socket, { id, nickName: restoredNickName });
-  //       } else {
-  //       }
-  //       break;
-
-  //     case "register":
-  //       clients[id] = { socket, nickName: incomingMessage.payload };
-  //       const user = { id, nickName: incomingMessage.payload };
-  //       sendLoggedData(socket, user);
-  //       break;
-
-  //     default:
-  //       break;
-  //   }
-  // });
-
   socket.on("close", function() {
     if (!id) {
       return;
     }
-    const connectionsLeft = deleteConnection(id, socket);
-    console.log(connectionsLeft);
+    const connectionsLeft = deleteConnection(id, socket);    
     if (!connectionsLeft) {
       broadCastChatMessage(
         {

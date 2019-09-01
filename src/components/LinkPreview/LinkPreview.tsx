@@ -96,7 +96,7 @@ const useAxiosFetch = (url: string, timeout?: number) => {
       unmounted = true;
       source.cancel("Cancelling in cleanup");
     };
-  }, []);
+  }, [timeout, url]);
 
   return { data, loading, error, errorMessage };
 };
@@ -117,16 +117,14 @@ const fakeData1 = {
   title: "Авторский проект Алекса Экслера",
   url: "https://www.exler.ru/"
 };
+
 export function PreviewLink({ url }: { url: string }) {
   const previewUrl = `http://api.linkpreview.net/?key=${apiKey}&q=${url}`;
   const { data, loading }: { data: any; loading: boolean } = useAxiosFetch(
     previewUrl,
     2500
   );
-  // const data = fakeData1;
-  // const loading = false;
-
-  // const data = fakeData;
+  
   if (!data) return null;
   const { description = "", title = "", image = "" } = data || {};
   const formattedDescription =

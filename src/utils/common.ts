@@ -7,10 +7,13 @@ export function getTimeString(time: number) {
 }
 
 const urlRegEx = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/;
-export function parseToBlocks({messageText = '', authorId}: IMessage): IElementBlock[] {
+export function parseToBlocks({messageText = '', authorId, isModified, isDeleted}: IMessage): IElementBlock[] {
   const splittedByUrl = messageText.split(urlRegEx);
   if (authorId === 'bot') {
     return [{type: EMessageBlocks.InfoText, text: messageText}]
+  }
+  if (isDeleted) {
+    return [{type: EMessageBlocks.InfoText, text: 'Message deleted'}]
   }
   const mappedToBlocks: IElementBlock[] = splittedByUrl
     .filter(Boolean)
@@ -18,6 +21,9 @@ export function parseToBlocks({messageText = '', authorId}: IMessage): IElementB
       const type = urlRegEx.test(text) ? EMessageBlocks.Link : EMessageBlocks.PlainText;
       return { type, text: text.trim() };
     });
+    if (isModified) {
+      mappedToBlocks.push({type: EMessageBlocks.InfoText, text: '(edited)'})
+    }
 
   return mappedToBlocks;
 }
@@ -30,7 +36,7 @@ export function getMappedMessages(
     .map(message => {
       const author =
         message.authorId === "bot"
-          ? "MessageBot"
+          ? "Meetingbot"
           : (users.find(({ id }) => id === message.authorId) || ({} as IUser))
               .nickName;
       return {
