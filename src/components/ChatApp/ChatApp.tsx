@@ -1,4 +1,4 @@
-import React, { useRef, RefObject, useEffect, useState, Fragment } from "react";
+import React, { useRef, RefObject, useEffect, useState, Fragment, useCallback } from "react";
 import { ChatInput } from "../ChatInput/ChatInput";
 import { IUser, IMappedMessage, ETabs, IMessage } from "../../models";
 import { ChatMessage } from "../ChatMessage/ChatMessage";
@@ -32,6 +32,17 @@ export function ChatApp({
   let messagesLength = useRef(messages.length);
   const mappedMessages = getMappedMessages(messages, users);
 
+  const scrollToBottom = useCallback(() => {
+    if (!refToElement.scrollTo){
+      return;
+    }
+    refToElement.scrollTo({
+      top: refToElement.scrollHeight,
+      behavior: "smooth"
+    });
+    setNewMessages(0);
+  }, [refToElement]);
+
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) {
@@ -40,7 +51,7 @@ export function ChatApp({
     if (lastMessage.authorId === userId) {
       scrollToBottom();
     }
-  }, [messages]);
+  }, [messages, scrollToBottom, userId]);
 
   useEffect(() => {
     if (!refToElement || !refToElement.clientHeight) return;
@@ -55,13 +66,7 @@ export function ChatApp({
     }
   }, [messages.length, refToElement]);
 
-  const scrollToBottom = () => {
-    refToElement.scrollTo({
-      top: refToElement.scrollHeight,
-      behavior: "smooth"
-    });
-    setNewMessages(0);
-  };
+  
 
   const onScroll = (evt: any) => {
     const position = evt.target.scrollTop;

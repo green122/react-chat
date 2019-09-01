@@ -1,26 +1,11 @@
-const express = require("express");
-const server = express();
-const path = require('path');
-const port = process.env.PORT || 5000;
-server.use(express.static(__dirname));
-server.use(express.static(path.resolve(__dirname, '../build')));
-
-server.get('/ping', function (req, res) {
-  return res.send('pong');
-});
-
-server.get('/*', function (req, res) {
-  res.sendFile(path.resolve(__dirname, '../build', 'index.html'));
-});
-
 const WebSocketServer = new require("ws");
-const webSocketServer = new WebSocketServer.Server({ port: 8081 });
+const webSocketServer = new WebSocketServer.Server({
+  port: process.env.PORT || 8081
+});
 
 const createClientsHandlers = require("./clients.controller");
 const createMessagesController = require("./messages.controller");
 const createChatMessagesController = require("./chatMessages.controller");
-
-server.listen(port)
 
 function broadCastChatMessage(message, excludeUserId) {
   const addedMessage = addNewMessage(message);
@@ -45,7 +30,10 @@ const {
 } = createClientsHandlers();
 
 function sendDataToLoggedUser(id) {
-  sendMessageToClientById({ type: "users", payload: getConnectedClients() }, id);
+  sendMessageToClientById(
+    { type: "users", payload: getConnectedClients() },
+    id
+  );
   sendMessageToClientById(
     {
       type: "history",
@@ -55,7 +43,7 @@ function sendDataToLoggedUser(id) {
   );
 }
 
-webSocketServer.on("connection", socket => {  
+webSocketServer.on("connection", socket => {
   let id;
   socket.on(
     "message",
@@ -92,17 +80,6 @@ webSocketServer.on("connection", socket => {
         }
         addClient(payloadId, { id: payloadId, socket });
         id = payloadId;
-        if (getClientsConnections(id) === 1) {
-          broadCastMessage({ type: "joined", payload: client }, id);
-          broadCastChatMessage(
-            {
-              messageText: `${client.nickName} joined`,
-              authorId: "bot",
-              userId: id
-            },
-            id
-          );
-        }
         sendMessage(socket, {
           type: "logged",
           payload: { nickName: client.nickName, id }
@@ -117,16 +94,18 @@ webSocketServer.on("connection", socket => {
     if (!id) {
       return;
     }
-    const connectionsLeft = deleteConnection(id, socket);    
-    if (!connectionsLeft) {
-      broadCastChatMessage(
-        {
-          messageText: `${getClientById(id).nickName} left`,
-          authorId: "bot",
-          userId: id
-        },
-        id
-      );
-    }
+    const connectionsLeft = deleteConnection(id, socket);
+    setTimeout(() => {
+      if (!getClientsConnections(id)) {
+        broadCastChatMessage(
+          {
+            messageText: `${getClientById(id).nickName} left`,
+            authorId: "bot",
+            userId: id
+          },
+          id
+        );
+      }
+    }, 5000);
   });
 });

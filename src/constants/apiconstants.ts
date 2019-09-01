@@ -1,0 +1,1 @@
+export const socketServerUrl = "ws://localhost:8081"

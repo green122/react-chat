@@ -89,7 +89,6 @@ export function ChatMessage({
   );
 
   const handleClick = (event: MouseEvent) => {
-    console.log(event.currentTarget);
     (event.currentTarget as HTMLElement).classList.toggle(".activated");
   };
 

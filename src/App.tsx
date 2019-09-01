@@ -40,6 +40,7 @@ const App: React.FC = () => {
       payload: { isProcessing: true, isChecked: false }
     });
     emitEvent("setId", userCookie);
+    // eslint-disable-next-line
   }, [connected]);
 
   const { isAuthProcessing, nickName } = state;
@@ -49,7 +50,7 @@ const App: React.FC = () => {
   if (isAuthProcessing.isProcessing || shouldCheckUser) return null;
   return (
     <Container>
-      {state.connected && nickName ? (
+      {nickName ? (
         <ChatApp
           messages={messages}
           userId={userId}

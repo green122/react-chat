@@ -1,8 +1,9 @@
 import { useEffect, useReducer, Dispatch } from "react";
 import { State, EActionTypes, IMessage, IAction } from "../../models";
 import cookie from "js-cookie";
+import { socketServerUrl } from "../../constants/apiconstants";
 
-let client: WebSocket;
+let client: WebSocket | null;
 
 const messages: IMessage[] = [];
 
@@ -67,7 +68,9 @@ function isClientReady() {
   return client && client.readyState === client.OPEN;
 }
 
-export const messageHandler = (dispatch: Dispatch<IAction>) => (event: MessageEvent) => {
+export const messageHandler = (dispatch: Dispatch<IAction>) => (
+  event: MessageEvent
+) => {
   let messageData;
   try {
     messageData = JSON.parse(event.data);
@@ -116,34 +119,40 @@ export const messageHandler = (dispatch: Dispatch<IAction>) => (event: MessageEv
     default:
       break;
   }
+};
+
+export function startSocket(dispatch: Dispatch<IAction>) {
+  client = new WebSocket(socketServerUrl);
+
+  client.onmessage = messageHandler(dispatch);
+  client.onopen = () => {
+    dispatch({ type: EActionTypes.SetConnected, payload: true });
+  };
+  client.onclose = event => {
+    if (event.wasClean) {
+      dispatch({ type: EActionTypes.SetConnected, payload: false });
+    } else {
+      dispatch({ type: EActionTypes.ConnectionError, payload: true });
+      dispatch({ type: EActionTypes.SetConnected, payload: false });
+      if (event.code === 1006) {
+        client = null;
+        setTimeout(() => startSocket(dispatch), 2000);
+      }
+    }
+    
+  };
+  return () => {
+    client && client.close();
+  };
 }
 
 export const useWebsocket = (dispatch: Dispatch<IAction>) => {
-  useEffect(() => {
-    if (!client) {
-      client = new WebSocket("wss://bk-test-app-1.herokuapp.com/");
-    }
-    
-    client.onmessage = messageHandler(dispatch);
-    client.onopen = () => {
-      dispatch({ type: EActionTypes.SetConnected, payload: true });
-    };
-    client.onclose = event => {
-      if (event.wasClean) {
-        dispatch({ type: EActionTypes.SetConnected, payload: false });
-      } else {
-        dispatch({ type: EActionTypes.ConnectionError, payload: true });
-      }
-    };
-    return () => {
-      client.close();
-    };
-  }, [dispatch]);
+  useEffect(() => startSocket(dispatch), [dispatch]);
 
   function emitEvent(type: string, payload: any) {
     if (isClientReady()) {
       const data = JSON.stringify({ type, payload });
-      client.send(data);
+      client && client.send(data);
     }
   }
 

@@ -8,8 +8,6 @@ import React, {
 import styled from "styled-components";
 import { SubmitFunctionType } from "../../models";
 
-
-
 export function ChatInput({
   onSubmit,
   value
@@ -22,7 +20,6 @@ export function ChatInput({
   const textRef: RefObject<HTMLTextAreaElement> = useRef(
     {} as HTMLTextAreaElement
   );
-  
 
   useEffect(() => {
     if (!message) {
@@ -37,7 +34,7 @@ export function ChatInput({
       .getComputedStyle(element)
       .getPropertyValue("padding-bottom")
       .match(/^\d*/) || [])[0];
-    element.style.height = "5px";
+    element.style.height = "15px";
     element.style.height =
       element.scrollHeight - topPadding - bottomPadding + "px";
   }, [message]);
@@ -58,7 +55,7 @@ export function ChatInput({
   const handleChange = (evt: any) => {
     // ignore line feed character after clearing
     if (evt.target.value.charCodeAt(0) === 10 && textRef.current) {
-      textRef.current.style.height = "5px";
+      textRef.current.style.height = window.innerWidth > 360 ? "35px" : "25px";
       return;
     }
     setMessage(evt.target.value);
