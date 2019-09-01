@@ -61,7 +61,7 @@ const PenIcon = styled(Pen)`
   height: 20px;
   color: darkgray;
   cursor: pointer;
-  @media (max-width: 320px) {
+  @media (max-width: 360px) {
     width: 15px;
     height: 15px;
   }
@@ -72,7 +72,7 @@ const DeleteIcon = styled(Delete)`
   height: 20px;
   color: darkgray;
   cursor: pointer;
-  @media (max-width: 320px) {
+  @media (max-width: 360px) {
     width: 15px;
     height: 15px;
   }

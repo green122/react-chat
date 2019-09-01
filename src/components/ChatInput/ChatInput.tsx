@@ -24,7 +24,7 @@ const ChatInputView = styled.textarea`
     font-size: 24px;
     padding-left: 10px;
   }
-  @media (max-width: 320px) {
+  @media (max-width: 360px) {
     margin: 0px 10px 0px 10px;
     padding: 10px;
     height: 25px;

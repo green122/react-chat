@@ -43,12 +43,12 @@ const {
   getClientsConnections,
   sendMessage,
   sendMessageToClientById,
-  getClients,
+  getConnectedClients,
   getClientById
 } = createClientsHandlers();
 
 function sendDataToLoggedUser(id) {
-  sendMessageToClientById({ type: "users", payload: getClients() }, id);
+  sendMessageToClientById({ type: "users", payload: getConnectedClients() }, id);
   sendMessageToClientById(
     {
       type: "history",

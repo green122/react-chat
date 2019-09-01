@@ -59,6 +59,11 @@ module.exports = function() {
     return Array.from(clients.values());
   }
 
+  function getConnectedClients(){
+    const clients = getClients();
+    return clients.filter(client => Boolean(getClientsConnections(client.id)));
+  }
+
   return {
     addClient,
     getClients,
@@ -67,6 +72,7 @@ module.exports = function() {
     sendMessageToClientById,
     broadCastMessage,
     getClientsConnections,
+    getConnectedClients,
     sendMessage
   }
 };
