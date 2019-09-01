@@ -2,6 +2,25 @@ import React, { useRef, KeyboardEvent } from "react";
 import styled from "styled-components";
 import { SubmitFunctionType } from "../../models";
 
+export function Auth({ onSubmit }: { onSubmit: SubmitFunctionType }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const keyHandler = (evt: KeyboardEvent) => {
+    if (evt.key === "Enter") {
+      onSubmit((inputRef.current as HTMLInputElement).value);
+    }
+  };
+  return (
+    <Container>
+      <NameInput
+        ref={inputRef}
+        onKeyPress={keyHandler}
+        placeholder="Enter your nickname"
+      />
+    </Container>
+  );
+}
+
 const NameInput = styled.input`
   font-family: "Poppins", sans-serif;
   min-height: 24px;
@@ -25,22 +44,3 @@ const NameInput = styled.input`
 const Container = styled.div`
   margin: auto;
 `;
-
-export function Auth({ onSubmit }: { onSubmit: SubmitFunctionType }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const keyHandler = (evt: KeyboardEvent) => {
-    if (evt.key === "Enter") {
-      onSubmit((inputRef.current as HTMLInputElement).value);
-    }
-  };
-  return (
-    <Container>
-      <NameInput
-        ref={inputRef}
-        onKeyPress={keyHandler}
-        placeholder="Enter your nickname"
-      />
-    </Container>
-  );
-}

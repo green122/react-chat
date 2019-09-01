@@ -2,7 +2,21 @@ import React from "react";
 import styled from "styled-components";
 import { IUser } from "../../models";
 
-const UsersWrapper = styled.section`  
+interface UsersListProps {
+  users: IUser[];
+}
+
+export function UsersList({ users }: UsersListProps) {
+  return (
+    <UsersWrapper>
+      {users.map(user => (
+        <UserRow key={user.id}>{user.nickName}</UserRow>
+      ))}
+    </UsersWrapper>
+  );
+}
+
+const UsersWrapper = styled.section`
   flex-grow: 1;
   background-color: white;
   overflow-y: auto;
@@ -17,17 +31,3 @@ const UserRow = styled.div`
   padding: 12px;
   border-bottom: 1px solid;
 `;
-
-interface UsersListProps {
-  users: IUser[];
-}
-
-export function UsersList({ users }: UsersListProps) {
-  return (
-    <UsersWrapper>
-      {users.map(user => (
-        <UserRow key={user.id}>{user.nickName}</UserRow>
-      ))}
-    </UsersWrapper>
-  );
-}

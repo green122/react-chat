@@ -2,7 +2,7 @@
   "name": "my-ts-app",
   "version": "0.1.0",
   "private": true,
-  "dependencies": {
+  "dependencies": {    
     "@types/jest": "24.0.15",
     "@types/js-cookie": "^2.2.2",
     "@types/node": "12.6.2",
@@ -15,7 +15,9 @@
     "concurrently": "^4.1.2",
     "cookie-parser": "^1.4.4",
     "cors": "^2.8.5",
+    "jest-websocket-mock": "^1.5.0",
     "js-cookie": "^2.2.1",
+    "mock-socket": "^9.0.0",
     "nodemon": "^1.19.1",
     "react": "^16.8.6",
     "react-custom-scrollbars": "^4.2.1",
