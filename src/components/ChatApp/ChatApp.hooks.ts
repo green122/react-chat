@@ -121,8 +121,7 @@ export const messageHandler = (dispatch: Dispatch<IAction>) => (event: MessageEv
 export const useWebsocket = (dispatch: Dispatch<IAction>) => {
   useEffect(() => {
     if (!client) {
-      client = new WebSocket("wss://ag-react-chat.herokuapp.com:8081");
-      // client = new WebSocket("ws://localhost:8081");
+      client = new WebSocket("wss://bk-test-app-1.herokuapp.com/");
     }
     
     client.onmessage = messageHandler(dispatch);

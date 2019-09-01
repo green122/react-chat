@@ -1,8 +1,7 @@
 const express = require("express");
 const server = express();
 const path = require('path');
-const port = 8080;
-server.use(express.static(__dirname));
+const port = process.env.PORT || 5000;
 server.use(express.static(__dirname));
 server.use(express.static(path.resolve(__dirname, '../build')));
 
@@ -11,19 +10,17 @@ server.get('/ping', function (req, res) {
 });
 
 server.get('/*', function (req, res) {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  res.sendFile(path.resolve(__dirname, '../build', 'index.html'));
 });
 
-server.listen(port)
-
 const WebSocketServer = new require("ws");
+const webSocketServer = new WebSocketServer.Server({ port: 8081 });
+
 const createClientsHandlers = require("./clients.controller");
 const createMessagesController = require("./messages.controller");
 const createChatMessagesController = require("./chatMessages.controller");
 
-const webSocketServer = new WebSocketServer.Server({
-  port: 8081
-});
+server.listen(port)
 
 function broadCastChatMessage(message, excludeUserId) {
   const addedMessage = addNewMessage(message);
@@ -58,8 +55,7 @@ function sendDataToLoggedUser(id) {
   );
 }
 
-webSocketServer.on("connection", socket => {
-  console.log('connected');
+webSocketServer.on("connection", socket => {  
   let id;
   socket.on(
     "message",
