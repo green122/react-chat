@@ -1,9 +1,25 @@
+const express = require("express");
+const server = express();
+const path = require('path');
+const port = process.env.PORT || 3001;
+server.use(express.static(__dirname));
+server.use(express.static(__dirname));
+server.use(express.static(path.resolve(__dirname, '../build')));
+
+server.get('/ping', function (req, res) {
+  return res.send('pong');
+});
+
+server.get('/*', function (req, res) {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
+server.listen(port)
+
 const WebSocketServer = new require("ws");
-const server = require("express")();
 const createClientsHandlers = require("./clients.controller");
 const createMessagesController = require("./messages.controller");
 const createChatMessagesController = require("./chatMessages.controller");
-server.use(require("cors")());
 
 const webSocketServer = new WebSocketServer.Server({
   port: 8081
