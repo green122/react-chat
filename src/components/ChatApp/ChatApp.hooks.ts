@@ -1,10 +1,5 @@
 import { useEffect, useReducer, Dispatch } from "react";
-import {
-  State,
-  EActionTypes,
-  IMessage,
-  IAction
-} from "../../models";
+import { State, EActionTypes, IMessage, IAction } from "../../models";
 import cookie from "js-cookie";
 
 let client: WebSocket;
@@ -14,7 +9,7 @@ const messages: IMessage[] = [];
 const initialState: State = {
   userId: "",
   nickName: "",
-  isAuthProcessing: false,
+  isAuthProcessing: { isProcessing: false, isChecked: false },
   connectionError: false,
   connected: false,
   users: [],
@@ -79,7 +74,13 @@ export const useWebsocket = (dispatch: Dispatch<IAction>) => {
     }
 
     client.onmessage = (event: MessageEvent) => {
-      const messageData = JSON.parse(event.data);
+      let messageData;
+      try {
+        messageData = JSON.parse(event.data);
+      } catch (error) {
+        console.error("Bad answer");
+        return;
+      }
       const { payload } = messageData;
       switch (messageData.type) {
         case "message":
@@ -87,7 +88,10 @@ export const useWebsocket = (dispatch: Dispatch<IAction>) => {
           break;
         case "logged":
           dispatch({ type: EActionTypes.Logged, payload });
-          dispatch({ type: EActionTypes.AuthProcessing, payload: false });
+          dispatch({
+            type: EActionTypes.AuthProcessing,
+            payload: { isProcessing: false, isChecked: true }
+          });
           cookie.set("chat-ts-app", payload.id);
           break;
         case "modifyMessage":
@@ -95,7 +99,10 @@ export const useWebsocket = (dispatch: Dispatch<IAction>) => {
           break;
         case "noAuth":
           dispatch({ type: EActionTypes.SetNickName, payload: "" });
-          dispatch({ type: EActionTypes.AuthProcessing, payload: false });
+          dispatch({
+            type: EActionTypes.AuthProcessing,
+            payload: { isProcessing: false, isChecked: true }
+          });
           break;
         case "deleteMessage":
           dispatch({ type: EActionTypes.DeleteMessage, payload });

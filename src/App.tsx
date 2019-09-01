@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { ChatApp } from "./components/ChatApp/ChatApp";
 import cookie from "js-cookie";
 
-import { ChatInput } from "./components/ChatInput/ChatInput";
 import {
   useMessagesReducer,
   useWebsocket
@@ -12,17 +11,20 @@ import { EActionTypes } from "./models";
 import { Auth } from "./components/Auth/Auth";
 
 const Container = styled.article`
-  @font-face {
-    font-family: "Lexend Deca";
-    src: url("./ui-res/LexendDeca-Regular.ttf") format("ttf");
-  }
-  font-family: "Lexend Deca", sans-serif;
+  @import url("https://fonts.googleapis.com/css?family=Poppins&display=swap");
+
+  font-family: "Poppins", sans-serif;
   width: 100%;
   height: 100vh;
   align-items: center;
   display: flex;
   background-color: #dddddd;
 `;
+
+const authInfoExists = () => {
+  return Boolean(cookie.get("chat-ts-app"));
+};
+
 const App: React.FC = () => {
   const [state, dispatch] = useMessagesReducer();
   const { sendMessage, emitEvent } = useWebsocket(dispatch);
@@ -33,13 +35,18 @@ const App: React.FC = () => {
     if (!userCookie || !connected) {
       return;
     }
-    dispatch({ type: EActionTypes.AuthProcessing, payload: true });
+    dispatch({
+      type: EActionTypes.AuthProcessing,
+      payload: { isProcessing: true, isChecked: false }
+    });
     emitEvent("setId", userCookie);
   }, [connected]);
 
   const { isAuthProcessing, nickName } = state;
 
-  if (isAuthProcessing) return null;
+  const shouldCheckUser =
+    authInfoExists() && !isAuthProcessing.isChecked && !nickName;
+  if (isAuthProcessing.isProcessing || shouldCheckUser) return null;
   return (
     <Container>
       {state.connected && nickName ? (

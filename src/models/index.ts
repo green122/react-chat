@@ -6,7 +6,7 @@ export interface IAction {
 export interface IMessage {
   messageText: string;
   id?: string;
-  authorId?: string;  
+  authorId?: string;
   time?: number;
   isModified?: boolean;
   isDeleted?: boolean;
@@ -40,13 +40,13 @@ export enum EActionTypes {
   UserLeft = "User Left",
   SetNickName = "Set Nick Name",
   AuthProcessing = "AuthProcessing",
-  ConnectionError = 'Connection Error'
+  ConnectionError = "Connection Error"
 }
 
 export interface State {
   userId: string;
   nickName: string;
-  isAuthProcessing: boolean;
+  isAuthProcessing: { isProcessing: boolean; isChecked: boolean };
   connectionError: boolean;
   connected: boolean;
   users: IUser[];
@@ -59,9 +59,9 @@ export enum ETabs {
 }
 
 export enum EMessageBlocks {
-  Link ='link',
-  PlainText = 'text',
-  InfoText = 'info'
+  Link = "link",
+  PlainText = "text",
+  InfoText = "info"
 }
 
 export type SubmitFunctionType = (value: string) => void;

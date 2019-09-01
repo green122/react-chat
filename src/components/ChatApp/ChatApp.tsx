@@ -39,6 +39,20 @@ const ChatList = styled.div`
   @media (max-width: 320px) {
     padding: 12px;
   }
+  &::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    background-color: #f5f5f5;
+  }
+
+  &::-webkit-scrollbar {
+    width: 10px;
+    background-color: #f5f5f5;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #aaaaaa;    
+  }
 `;
 
 const ScrollButton = styled.button`
@@ -161,7 +175,7 @@ export function ChatApp({
                 <ChatMessage
                   key={messageEntry.id}
                   tag={index}
-                  editable={messageEntry.authorId === userId}
+                  editable={messageEntry.authorId === userId && !messageEntry.isDeleted}
                   onEdit={handleEditMessage}
                   onDelete={handleDeleteMessage}
                   messageEntry={messageEntry}

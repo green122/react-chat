@@ -50,6 +50,7 @@ export function ChatTabs({ onChange, tabs, activeTab }: ChatTabsProps) {
     <Tabs>
       {tabs.map(tab => (
         <TabContainer
+          key={tab.id}
           width={tabWidth}
           className={tab.id === activeTab ? "active" : ""}
           onClick={() => onChange(tab.id)}
